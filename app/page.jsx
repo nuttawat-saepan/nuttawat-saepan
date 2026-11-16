@@ -87,9 +87,17 @@ export default function Home() {
 
           <section className="projects light" id="projects" aria-labelledby="projects-title">
             <div className="frame">
-              <div className="section-heading" data-reveal>
-                <h2 id="projects-title">Selected <em>work</em></h2>
-                <span className="eyebrow project-count">Five projects</span>
+              <div className="work-opening">
+                <div className="work-stage">
+                  <h2 className="work-title" id="projects-title" aria-label="Selected projects">
+                    <span>Selected</span><span>Projects</span>
+                  </h2>
+                  <div className="work-media" aria-hidden="true">
+                    <video muted loop playsInline preload="none" poster="/assets/selected-projects.webp">
+                      <source src="/assets/selected-projects.mp4" type="video/mp4" />
+                    </video>
+                  </div>
+                </div>
               </div>
               <ol className="project-list">
                 {projects.map((project, index) => (

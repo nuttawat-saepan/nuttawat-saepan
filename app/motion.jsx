@@ -17,9 +17,12 @@ export default function Opening() {
     const number = counter.current;
     const viewport = document.querySelector(".portfolio-viewport");
     const sidebar = document.querySelector(".site-header");
+    const workOpening = document.querySelector(".work-opening");
+    const workVideo = workOpening.querySelector("video");
+    let videoVisible = false;
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
 
-    function updateSidebarColor() {
+    function updateScrollEffects() {
       const progress = horizontal.matches && viewport.clientWidth
         ? Math.max(0, Math.min(viewport.scrollLeft / viewport.clientWidth, 1))
         : 0;
@@ -27,12 +30,33 @@ export default function Opening() {
 
       sidebar.style.setProperty("--sidebar-blend", `${blend * 100}%`);
       sidebar.toggleAttribute("data-light-text-background", blend >= 0.34);
+
+      const distance = viewport.getBoundingClientRect().left - workOpening.getBoundingClientRect().left;
+      const workProgress = horizontal.matches && !motion.matches && viewport.clientWidth
+        ? Math.max(0, Math.min(distance / (viewport.clientWidth * 0.68), 1))
+        : 0;
+      const expansion = workProgress * workProgress * (3 - 2 * workProgress);
+      workOpening.style.setProperty("--work-expand", expansion);
     }
 
-    const viewportResize = new ResizeObserver(updateSidebarColor);
+    const viewportResize = new ResizeObserver(updateScrollEffects);
     viewportResize.observe(viewport);
-    viewport.addEventListener("scroll", updateSidebarColor, { passive: true });
-    updateSidebarColor();
+    viewport.addEventListener("scroll", updateScrollEffects, { passive: true });
+    updateScrollEffects();
+
+    function updateVideo() {
+      if (videoVisible && !motion.matches) {
+        workVideo.play().catch(() => {});
+      } else {
+        workVideo.pause();
+      }
+    }
+
+    const workObserver = new IntersectionObserver(([entry]) => {
+      videoVisible = entry.isIntersecting;
+      updateVideo();
+    });
+    workObserver.observe(workVideo);
 
     let scrollFrame = 0;
     let scrollTarget = 0;
@@ -94,7 +118,7 @@ export default function Opening() {
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
-    horizontal.addEventListener("change", updateSidebarColor);
+    horizontal.addEventListener("change", updateScrollEffects);
     let frame = 0;
     let transition = 0;
     let cleanup = 0;
@@ -118,7 +142,8 @@ export default function Opening() {
     document.querySelectorAll("[data-reveal]").forEach((node) => observer.observe(node));
 
     function updatePreference(event) {
-      updateSidebarColor();
+      updateScrollEffects();
+      updateVideo();
       if (event.matches) {
         stopOpening();
         stopWheelScroll();
@@ -158,14 +183,17 @@ export default function Opening() {
       observer.disconnect();
       stopWheelScroll();
       viewportResize.disconnect();
-      viewport.removeEventListener("scroll", updateSidebarColor);
+      workObserver.disconnect();
+      workVideo.pause();
+      workOpening.style.removeProperty("--work-expand");
+      viewport.removeEventListener("scroll", updateScrollEffects);
       sidebar.style.removeProperty("--sidebar-blend");
       sidebar.removeAttribute("data-light-text-background");
       viewport.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
       document.removeEventListener("keydown", stopWheelScroll);
       horizontal.removeEventListener("change", stopWheelScroll);
-      horizontal.removeEventListener("change", updateSidebarColor);
+      horizontal.removeEventListener("change", updateScrollEffects);
       motion.removeEventListener("change", updatePreference);
       document.removeEventListener("focusin", skipOpening);
       document.removeEventListener("keydown", skipOpening);

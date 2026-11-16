@@ -8,6 +8,7 @@ This specification applies to the editorial redesign. The previous design and re
 - Desktop: Home → Profile → Projects → Techstack → Contact sit side by side in a horizontal viewport. A fixed navigation rail stays on the left. Vertical wheel input moves horizontally once the current panel or project entry reaches its vertical scroll boundary. Trackpad horizontal input and section links use native scrolling. Mobile uses a vertical document.
 - Profile: the light panel enters from the right as the horizontal viewport scrolls. The real portrait is derived from Kisra-665.jpg.
 - Projects, Techstack, Contact: the Projects heading enters over 400 ms. On desktop the white Selected Work chapter opens into five horizontal dark project panels, followed by the Techstack chapter. On mobile the project entries stack vertically. The Contact heading enters over 300 ms.
+- Projects opening: a muted local project-title montage sits between SELECTED and PROJECTS. On desktop it expands over the first 68% of a viewport of horizontal travel, holds full size until 85%, and then scrolls away as the project cards arrive from the right. Mobile uses a video below the heading. Reduced motion uses the poster without a pinned expansion.
 - Keyboard focus or Escape skips the opening. Direct section links and reduced-motion preferences bypass it. Mobile uses stacked layouts.
 
 ---
