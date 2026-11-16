@@ -65,11 +65,11 @@ export default function Home() {
               </div>
               <h1 id="home-title" className="hero-name">
                 <span><span>Nuttawat</span></span>
-                <span><span>Saepan<span className="name-period">.</span></span></span>
+                <span><span>Saepan</span></span>
               </h1>
               <div className="hero-bottom">
                 <p lang="en">I build web and mobile apps, from live commerce and video platforms to robotics systems.</p>
-                <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">→</span></a>
+                <a className="work-link hero-scroll" href="#profile">Scroll</a>
               </div>
             </div>
           </section>
