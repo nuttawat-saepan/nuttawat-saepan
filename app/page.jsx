@@ -1,12 +1,6 @@
 import Image from "next/image";
 import Opening from "./motion";
-
-const links = [
-  ["Profile", "#profile"],
-  ["Projects", "#projects"],
-  ["Techstack", "#techstack"],
-  ["Contact", "#contact"],
-];
+import Sidebar from "./sidebar";
 
 const projects = [
   {
@@ -59,14 +53,7 @@ export default function Home() {
     <>
       <a className="skip-link" href="#main">ข้ามไปยังเนื้อหา</a>
       <Opening />
-      <header className="site-header dark" id="top">
-        <div className="frame header-inner">
-          <a className="monogram" href="#home" aria-label="Nuttawat Saepan — Home">NS<span>.</span></a>
-          <nav aria-label="เมนูหลัก">
-            {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
-          </nav>
-        </div>
-      </header>
+      <Sidebar />
 
       <div className="portfolio-viewport">
         <main id="main">
