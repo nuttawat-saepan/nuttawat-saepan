@@ -16,7 +16,23 @@ export default function Opening() {
     const intro = overlay.current;
     const number = counter.current;
     const viewport = document.querySelector(".portfolio-viewport");
+    const sidebar = document.querySelector(".site-header");
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
+
+    function updateSidebarColor() {
+      const progress = horizontal.matches && viewport.clientWidth
+        ? Math.max(0, Math.min(viewport.scrollLeft / viewport.clientWidth, 1))
+        : 0;
+      const blend = motion.matches ? Number(progress >= 0.5) : progress;
+
+      sidebar.style.setProperty("--sidebar-blend", `${blend * 100}%`);
+      sidebar.toggleAttribute("data-light-text-background", blend >= 0.34);
+    }
+
+    const viewportResize = new ResizeObserver(updateSidebarColor);
+    viewportResize.observe(viewport);
+    viewport.addEventListener("scroll", updateSidebarColor, { passive: true });
+    updateSidebarColor();
 
     let scrollFrame = 0;
     let scrollTarget = 0;
@@ -78,6 +94,7 @@ export default function Opening() {
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
+    horizontal.addEventListener("change", updateSidebarColor);
     let frame = 0;
     let transition = 0;
     let cleanup = 0;
@@ -101,6 +118,7 @@ export default function Opening() {
     document.querySelectorAll("[data-reveal]").forEach((node) => observer.observe(node));
 
     function updatePreference(event) {
+      updateSidebarColor();
       if (event.matches) {
         stopOpening();
         stopWheelScroll();
@@ -139,10 +157,15 @@ export default function Opening() {
       stopOpening();
       observer.disconnect();
       stopWheelScroll();
+      viewportResize.disconnect();
+      viewport.removeEventListener("scroll", updateSidebarColor);
+      sidebar.style.removeProperty("--sidebar-blend");
+      sidebar.removeAttribute("data-light-text-background");
       viewport.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
       document.removeEventListener("keydown", stopWheelScroll);
       horizontal.removeEventListener("change", stopWheelScroll);
+      horizontal.removeEventListener("change", updateSidebarColor);
       motion.removeEventListener("change", updatePreference);
       document.removeEventListener("focusin", skipOpening);
       document.removeEventListener("keydown", skipOpening);
