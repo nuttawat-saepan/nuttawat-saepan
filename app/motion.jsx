@@ -21,7 +21,7 @@ export default function Opening() {
     function onWheel(event) {
       if (!horizontal.matches || event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
 
-      const panel = event.target.closest("section, footer");
+      const panel = event.target.closest(".project, section, footer");
       if (panel) {
         const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
         if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) return;

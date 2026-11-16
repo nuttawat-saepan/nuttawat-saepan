@@ -3,11 +3,11 @@
 This specification applies to the editorial redesign. The previous design and reference history follow below.
 
 - Reference observation: the new clip opens with changing year numerals and moves into a large serif name, alternating dark and light sections.
-- Loading: count from 0% to 100% over 1,000 ms, hold for 120 ms, then lift the overlay over 460 ms. This is an opening animation.
+- Loading: count from 0% to 100% over 1,000 ms, hold for 120 ms, then move the overlay left on desktop and up on mobile over 460 ms. This is an opening animation.
 - Home: reveal the name over 650 ms with a 60 ms offset for the second line. The English summary follows with a 160 ms delay. SOFTWARE ENGINEER is visible as the overlay clears.
-- Desktop: Home → Profile → Projects → Techstack → Contact sit side by side in a horizontal viewport. Vertical wheel input moves horizontally once the current panel reaches its vertical scroll boundary. Trackpad horizontal input and section links use native scrolling. Mobile uses a vertical document.
+- Desktop: Home → Profile → Projects → Techstack → Contact sit side by side in a horizontal viewport. A fixed navigation rail stays on the left. Vertical wheel input moves horizontally once the current panel or project entry reaches its vertical scroll boundary. Trackpad horizontal input and section links use native scrolling. Mobile uses a vertical document.
 - Profile: the light panel enters from the right as the horizontal viewport scrolls. The real portrait is derived from Kisra-665.jpg.
-- Projects, Techstack, Contact: the Projects heading enters over 400 ms. All five project entries and the Techstack list stay in normal flow. The Contact heading enters over 300 ms.
+- Projects, Techstack, Contact: the Projects heading enters over 400 ms. On desktop the white Selected Work chapter opens into five horizontal dark project panels, followed by the Techstack chapter. On mobile the project entries stack vertically. The Contact heading enters over 300 ms.
 - Keyboard focus or Escape skips the opening. Direct section links and reduced-motion preferences bypass it. Mobile uses stacked layouts.
 
 ---

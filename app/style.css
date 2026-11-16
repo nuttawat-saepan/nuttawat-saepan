@@ -103,33 +103,87 @@ h2 span { color: var(--olive); }
 @keyframes section-in { from { opacity: .55; transform: translateY(.65rem); } }
 
 @media (min-width: 900px) and (min-height: 600px) {
+  :root { --rail: 3.4rem; --panel: calc(100vw - var(--rail)); --chapter-pad: clamp(2rem, 4.7vw, 6.25rem); }
   html { overflow: hidden; }
+
+  .site-header { position: fixed; inset: 0 auto 0 0; width: var(--rail); background: var(--paper); color: var(--ink); border-right: 1px solid var(--line); }
+  .header-inner { flex-direction: column; height: 100%; padding: 1.25rem .5rem 2rem; }
+  .monogram { font-size: 1.55rem; }
+  .monogram span { color: var(--olive); }
+  nav { flex: 1; flex-direction: column; align-items: center; justify-content: space-evenly; padding-block-start: 2rem; }
+  nav a { writing-mode: vertical-rl; transform: rotate(180deg); font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; }
+  nav a:hover { color: var(--olive); }
+
   .portfolio-viewport {
     display: flex;
-    width: 100%;
-    height: calc(100dvh - 5rem);
+    margin-left: var(--rail);
+    width: var(--panel);
+    height: 100dvh;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: #b2ad9d var(--dark);
+    scroll-padding-inline: 0;
   }
-
   .portfolio-viewport > main { display: flex; flex: 0 0 auto; }
-  .portfolio-viewport section,
-  .portfolio-viewport > footer {
+  .portfolio-viewport :is(section, footer) {
     flex: 0 0 auto;
-    width: 100vw;
+    width: var(--panel);
     height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
   }
+  .portfolio-viewport .frame { padding-inline: var(--chapter-pad); }
 
-  .hero-inner { min-height: 100%; }
-  .profile-grid { min-height: 100%; padding-block: clamp(2.5rem, 7vh, 5rem); }
-  .portrait img { max-height: min(58vh, 38rem); }
-  .contact > .frame { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+  .hero-inner {
+    position: relative;
+    display: block;
+    min-height: 100%;
+    padding-block: clamp(2.5rem, 6vh, 5rem);
+  }
+  .hero-top { position: absolute; inset: auto var(--chapter-pad) 2.35rem; border: 0; padding: 0; }
+  .hero-name { width: 69%; margin: 0; font-size: clamp(5.2rem, min(12.8vw, 22vh), 16rem); }
+  .hero-name > span + span { padding-inline-start: 0; }
+  .hero-bottom { position: absolute; inset: clamp(3rem, 7vh, 6rem) var(--chapter-pad) 5rem auto; width: min(22%, 25ch); flex-direction: column; justify-content: space-between; align-items: start; }
+  .hero-bottom p { font-size: clamp(.9rem, 1.35vw, 1.2rem); }
+  .hero-bottom .work-link { font-size: .77rem; gap: .65rem; }
+
+  .profile-grid { grid-template-columns: .7fr 1fr; grid-template-rows: auto 1fr; column-gap: clamp(3rem, 11vw, 13rem); min-height: 100%; padding-block: 3rem; align-items: start; }
+  .profile-copy { display: contents; }
+  .profile-copy .section-label { grid-column: 1; grid-row: 1; }
+  .profile-copy h2 { grid-column: 1; grid-row: 2; align-self: end; margin: 0; font-size: clamp(3rem, 6vw, 6.5rem); }
+  .profile-copy > p:last-child { grid-column: 2; grid-row: 1; max-width: 30ch; font-size: clamp(1.15rem, 2.15vw, 2rem); line-height: 1.55; }
+  .portrait { grid-column: 2; grid-row: 2; align-self: end; justify-self: start; width: min(100%, 18rem, 33vh); }
+  .portrait img { max-height: 38vh; }
+
+  .portfolio-viewport #projects { width: max-content; overflow: visible; padding: 0; }
+  .portfolio-viewport .projects > .frame { display: flex; width: max-content; max-width: none; height: 100%; padding: 0; }
+  .projects .section-heading { flex: 0 0 var(--panel); position: relative; display: grid; place-items: center; margin: 0; padding: var(--chapter-pad); }
+  .projects .section-heading h2 { font-size: clamp(5rem, 10.7vw, 11rem); text-transform: uppercase; }
+  .projects .section-heading em { font-weight: 400; }
+  .projects .project-count { position: absolute; bottom: 2.35rem; right: var(--chapter-pad); }
+  .project-list { display: flex; border: 0; }
+  .project { display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; width: clamp(21rem, 42vw, 41rem); padding: clamp(1.5rem, 3.3vw, 4rem); gap: clamp(1rem, 3vh, 2rem); border: 0; border-left: 1px solid #ffffff38; background: var(--dark); color: var(--cream); }
+  .project:nth-child(even) { background: #32302a; }
+  .project-index { flex: 0 0 auto; color: var(--cream); font-size: clamp(3.25rem, 6.2vw, 6rem); }
+  .project-title { margin-top: auto; }
+  .project h3 { font-size: clamp(2.25rem, 4.5vw, 5rem); }
+  .project-description { font-size: clamp(.89rem, 1.15vw, 1.05rem); }
+  .contribution h4 { color: var(--accent); }
+  .techstack { padding-block: 3.25rem; }
+  .stack-grid { min-height: 100%; align-items: center; }
+  .contact { padding-top: 0; }
+  .contact > .frame { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: clamp(2.5rem, 7vh, 5rem) 1rem; }
+  .contact h2 { text-transform: uppercase; font-size: clamp(6rem, 13.25vw, 14rem); }
+  .contact-main { flex: 1; align-items: stretch; }
+  .contact-main .work-link { align-self: end; }
+
+  .opening-inner { padding-inline: calc(var(--rail) + var(--chapter-pad)) var(--chapter-pad); }
+  .opening-count { font-size: clamp(8rem, 19vw, 20rem); }
+  [data-opening="revealing"] .opening { transform: translateX(-100%); }
 }
+
 
 @media (max-width: 850px) {
   .project { grid-template-columns: 2rem minmax(0, .85fr) minmax(0, 1.15fr); }

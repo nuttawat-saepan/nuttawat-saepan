@@ -82,7 +82,7 @@ export default function Home() {
               </h1>
               <div className="hero-bottom">
                 <p lang="en">I build web and mobile apps, from live commerce and video platforms to robotics systems.</p>
-                <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">↘</span></a>
+                <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">→</span></a>
               </div>
             </div>
           </section>
@@ -104,8 +104,8 @@ export default function Home() {
           <section className="projects light" id="projects" aria-labelledby="projects-title">
             <div className="frame">
               <div className="section-heading" data-reveal>
-                <h2 id="projects-title">Projects<span>.</span></h2>
-                <span className="eyebrow project-count">05 Projects</span>
+                <h2 id="projects-title">Selected <em>work</em></h2>
+                <span className="eyebrow project-count">Five projects</span>
               </div>
               <ol className="project-list">
                 {projects.map((project, index) => (
@@ -144,10 +144,10 @@ export default function Home() {
           <div className="frame">
             <div className="contact-main">
               <div>
-                <h2 id="contact-title" data-reveal>Contact<span>.</span></h2>
+                <h2 id="contact-title" data-reveal>Get in<br />touch<span>.</span></h2>
                 <p>ช่องทางติดต่อจะเพิ่มเติมภายหลัง</p>
               </div>
-              <a className="work-link" href="#home">Back to home <span aria-hidden="true">↑</span></a>
+              <a className="work-link" href="#home">Back to home <span aria-hidden="true">←</span></a>
             </div>
             <div className="footer-meta">
               <span>Nuttawat Saepan</span>
