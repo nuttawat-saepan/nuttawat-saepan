@@ -76,15 +76,12 @@ export default function Home() {
 
           <section className="profile light" id="profile" aria-labelledby="profile-title">
             <div className="frame profile-grid">
-              <div className="profile-copy">
-                <p className="eyebrow section-label">Profile</p>
-                <h2 id="profile-title">About me<span>.</span></h2>
-                <p>ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
-              </div>
+              <h2 id="profile-title">Quick intro</h2>
+              <p className="profile-intro">ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
               <figure className="portrait">
-                <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, 38vw" />
-                <figcaption>Nuttawat Saepan</figcaption>
+                <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, min(40vw, 45vh)" />
               </figure>
+              <a className="profile-link" href="#projects">View projects <span aria-hidden="true">→</span></a>
             </div>
           </section>
 
