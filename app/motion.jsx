@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
-const COUNT_DURATION = 1000;
-const HOLD_DURATION = 120;
+const COUNT_DURATION = 2800;
+const HOLD_DURATION = 450;
 const HERO_DURATION = 710;
 
 export default function Opening() {
@@ -154,14 +154,23 @@ export default function Opening() {
       if (event.type === "focusin" || event.key === "Escape") stopOpening();
     }
 
-    if (!motion.matches && !window.location.hash && window.scrollY === 0 && viewport.scrollLeft === 0) {
+    if (!motion.matches) {
       intro.hidden = false;
       root.dataset.opening = "counting";
       const started = performance.now();
 
       function count(now) {
         const progress = Math.min((now - started) / COUNT_DURATION, 1);
-        number.textContent = Math.floor(progress * 100);
+        const value = 100 * (1 - Math.pow(1 - progress, 2));
+        for (const reel of number.querySelectorAll("[data-place]")) {
+          const place = Number(reel.dataset.place);
+          const base = Math.floor(value / place);
+          const carry = Math.max(0, (value % place - (place - 1)));
+          const position = place === 1 ? value : base + carry;
+          reel.firstElementChild.style.transform = `translateY(-${position}em)`;
+          reel.style.width = place === 1 || value >= place - 1 ? ".56em" : "0";
+          reel.style.opacity = place === 1 || value >= place - 1 ? "1" : "0";
+        }
         if (progress < 1) {
           frame = requestAnimationFrame(count);
         } else {
@@ -203,9 +212,20 @@ export default function Opening() {
   return (
     <div ref={overlay} className="opening" aria-hidden="true" hidden>
       <div className="frame opening-inner">
-        <span className="eyebrow">Nuttawat Saepan</span>
-        <div className="opening-count"><span ref={counter}>0</span><span>%</span></div>
-        <span className="eyebrow">Portfolio</span>
+        
+                <div className="opening-count" ref={counter}>
+          {[100, 10, 1].map((place) => (
+            <span className="digit-window" data-place={place} key={place}>
+              <span className="digit-reel">
+                {Array.from({ length: 100 / place + 1 }, (_, index) => (
+                  <span className="digit" key={index}>{index % 10}</span>
+                ))}
+              </span>
+            </span>
+          ))}
+          <span className="opening-percent">%</span>
+        </div>
+        <span className="opening-caption">Web / Apps / Robotics</span>
       </div>
     </div>
   );
