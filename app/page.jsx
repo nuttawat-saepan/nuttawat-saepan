@@ -68,92 +68,94 @@ export default function Home() {
         </div>
       </header>
 
-      <main id="main">
-        <section className="hero dark" id="home" aria-labelledby="home-title">
-          <div className="frame hero-inner">
-            <div className="hero-top">
-              <p className="eyebrow role">Software Engineer</p>
-              <p className="eyebrow disciplines">Web / Apps / Robotics</p>
+      <div className="portfolio-viewport">
+        <main id="main">
+          <section className="hero dark" id="home" aria-labelledby="home-title">
+            <div className="frame hero-inner">
+              <div className="hero-top">
+                <p className="eyebrow role">Software Engineer</p>
+                <p className="eyebrow disciplines">Web / Apps / Robotics</p>
+              </div>
+              <h1 id="home-title" className="hero-name">
+                <span><span>Nuttawat</span></span>
+                <span><span>Saepan<span className="name-period">.</span></span></span>
+              </h1>
+              <div className="hero-bottom">
+                <p lang="en">I build web and mobile apps, from live commerce and video platforms to robotics systems.</p>
+                <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">↘</span></a>
+              </div>
             </div>
-            <h1 id="home-title" className="hero-name">
-              <span><span>Nuttawat</span></span>
-              <span><span>Saepan<span className="name-period">.</span></span></span>
-            </h1>
-            <div className="hero-bottom">
-              <p lang="en">I build web and mobile apps, from live commerce and video platforms to robotics systems.</p>
-              <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">↘</span></a>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="profile light" id="profile" aria-labelledby="profile-title">
-          <div className="frame profile-grid">
-            <div className="profile-copy">
-              <p className="eyebrow section-label">Profile</p>
-              <h2 id="profile-title">About me<span>.</span></h2>
-              <p>ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
+          <section className="profile light" id="profile" aria-labelledby="profile-title">
+            <div className="frame profile-grid">
+              <div className="profile-copy">
+                <p className="eyebrow section-label">Profile</p>
+                <h2 id="profile-title">About me<span>.</span></h2>
+                <p>ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
+              </div>
+              <figure className="portrait">
+                <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, 38vw" />
+                <figcaption>Nuttawat Saepan</figcaption>
+              </figure>
             </div>
-            <figure className="portrait">
-              <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, 38vw" />
-              <figcaption>Nuttawat Saepan</figcaption>
-            </figure>
-          </div>
-        </section>
+          </section>
 
-        <section className="projects light" id="projects" aria-labelledby="projects-title">
+          <section className="projects light" id="projects" aria-labelledby="projects-title">
+            <div className="frame">
+              <div className="section-heading" data-reveal>
+                <h2 id="projects-title">Projects<span>.</span></h2>
+                <span className="eyebrow project-count">05 Projects</span>
+              </div>
+              <ol className="project-list">
+                {projects.map((project, index) => (
+                  <li key={project.name} className="project">
+                    <span className="project-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <div className="project-title">
+                      <h3>{project.name}</h3>
+                      <p>{project.scope}</p>
+                    </div>
+                    <div className="project-description">
+                      {project.description && <p>{project.description}</p>}
+                      {project.contributions?.map(([label, description]) => (
+                        <div key={label} className="contribution">
+                          <h4>{label}</h4>
+                          <p>{description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <section className="techstack" id="techstack" aria-labelledby="stack-title">
+            <div className="frame stack-grid">
+              <h2 id="stack-title">Techstack<span>.</span></h2>
+              <dl className="stack-list">
+                {stack.map(([name, usage]) => <div key={name}><dt>{name}</dt><dd>{usage}</dd></div>)}
+              </dl>
+            </div>
+          </section>
+        </main>
+
+        <footer className="contact dark" id="contact" aria-labelledby="contact-title">
           <div className="frame">
-            <div className="section-heading" data-reveal>
-              <h2 id="projects-title">Projects<span>.</span></h2>
-              <span className="eyebrow project-count">05 Projects</span>
+            <div className="contact-main">
+              <div>
+                <h2 id="contact-title" data-reveal>Contact<span>.</span></h2>
+                <p>ช่องทางติดต่อจะเพิ่มเติมภายหลัง</p>
+              </div>
+              <a className="work-link" href="#home">Back to home <span aria-hidden="true">↑</span></a>
             </div>
-            <ol className="project-list">
-              {projects.map((project, index) => (
-                <li key={project.name} className="project">
-                  <span className="project-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                  <div className="project-title">
-                    <h3>{project.name}</h3>
-                    <p>{project.scope}</p>
-                  </div>
-                  <div className="project-description">
-                    {project.description && <p>{project.description}</p>}
-                    {project.contributions?.map(([label, description]) => (
-                      <div key={label} className="contribution">
-                        <h4>{label}</h4>
-                        <p>{description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="techstack" id="techstack" aria-labelledby="stack-title">
-          <div className="frame stack-grid">
-            <h2 id="stack-title">Techstack<span>.</span></h2>
-            <dl className="stack-list">
-              {stack.map(([name, usage]) => <div key={name}><dt>{name}</dt><dd>{usage}</dd></div>)}
-            </dl>
-          </div>
-        </section>
-      </main>
-
-      <footer className="contact dark" id="contact" aria-labelledby="contact-title">
-        <div className="frame">
-          <div className="contact-main">
-            <div>
-              <h2 id="contact-title" data-reveal>Contact<span>.</span></h2>
-              <p>ช่องทางติดต่อจะเพิ่มเติมภายหลัง</p>
+            <div className="footer-meta">
+              <span>Nuttawat Saepan</span>
+              <span>Built with Next.js</span>
             </div>
-            <a className="work-link" href="#top">Back to top <span aria-hidden="true">↑</span></a>
           </div>
-          <div className="footer-meta">
-            <span>Nuttawat Saepan</span>
-            <span>Built with Next.js</span>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </>
   );
 }

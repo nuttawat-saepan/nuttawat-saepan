@@ -15,6 +15,24 @@ export default function Opening() {
     const root = document.documentElement;
     const intro = overlay.current;
     const number = counter.current;
+    const viewport = document.querySelector(".portfolio-viewport");
+    const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
+
+    function onWheel(event) {
+      if (!horizontal.matches || event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+
+      const panel = event.target.closest("section, footer");
+      if (panel) {
+        const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
+        if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) return;
+      }
+
+      event.preventDefault();
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
+      viewport.scrollLeft += event.deltaY * unit;
+    }
+
+    viewport.addEventListener("wheel", onWheel, { passive: false });
     let frame = 0;
     let transition = 0;
     let cleanup = 0;
@@ -45,7 +63,7 @@ export default function Opening() {
       if (event.type === "focusin" || event.key === "Escape") stopOpening();
     }
 
-    if (!motion.matches && !window.location.hash && window.scrollY === 0) {
+    if (!motion.matches && !window.location.hash && window.scrollY === 0 && viewport.scrollLeft === 0) {
       intro.hidden = false;
       root.dataset.opening = "counting";
       const started = performance.now();
@@ -72,6 +90,7 @@ export default function Opening() {
     return () => {
       stopOpening();
       observer.disconnect();
+      viewport.removeEventListener("wheel", onWheel);
       motion.removeEventListener("change", updatePreference);
       document.removeEventListener("focusin", skipOpening);
       document.removeEventListener("keydown", skipOpening);
