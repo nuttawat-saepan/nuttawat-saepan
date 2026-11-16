@@ -123,7 +123,7 @@ h2 span { color: var(--olive); }
     overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: #b2ad9d var(--dark);
-    scroll-padding-inline: 0;
+    scroll-behavior: smooth;
   }
   .portfolio-viewport > main { display: flex; flex: 0 0 auto; }
   .portfolio-viewport :is(section, footer) {
@@ -212,7 +212,7 @@ h2 span { color: var(--olive); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
+  html, .portfolio-viewport { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .opening { display: none; }
 }

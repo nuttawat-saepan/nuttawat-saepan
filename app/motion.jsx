@@ -18,21 +18,66 @@ export default function Opening() {
     const viewport = document.querySelector(".portfolio-viewport");
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
 
+    let scrollFrame = 0;
+    let scrollTarget = 0;
+    let previousFrameTime = 0;
+
+    function stopWheelScroll() {
+      cancelAnimationFrame(scrollFrame);
+      scrollFrame = 0;
+      previousFrameTime = 0;
+    }
+
+    function animateWheelScroll(now) {
+      const position = viewport.scrollLeft;
+      scrollTarget = Math.min(scrollTarget, viewport.scrollWidth - viewport.clientWidth);
+      const distance = scrollTarget - position;
+      const elapsed = previousFrameTime ? now - previousFrameTime : 16;
+      previousFrameTime = now;
+
+      if (Math.abs(distance) < 1) {
+        viewport.scrollTo({ left: scrollTarget, behavior: "instant" });
+        stopWheelScroll();
+        return;
+      }
+
+      const step = distance * (1 - Math.exp(-elapsed / 105));
+      viewport.scrollTo({ left: position + Math.sign(step) * Math.max(1, Math.abs(step)), behavior: "instant" });
+      scrollFrame = requestAnimationFrame(animateWheelScroll);
+    }
+
     function onWheel(event) {
-      if (!horizontal.matches || event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+      if (!horizontal.matches || event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) {
+        stopWheelScroll();
+        return;
+      }
 
       const panel = event.target.closest(".project, section, footer");
       if (panel) {
         const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
-        if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) return;
+        if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) {
+          stopWheelScroll();
+          return;
+        }
       }
 
       event.preventDefault();
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
-      viewport.scrollLeft += event.deltaY * unit;
+      const base = scrollFrame ? scrollTarget : viewport.scrollLeft;
+      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+      scrollTarget = Math.max(0, Math.min(base + event.deltaY * unit, maxScroll));
+
+      if (motion.matches) {
+        viewport.scrollTo({ left: scrollTarget, behavior: "instant" });
+      } else if (!scrollFrame) {
+        scrollFrame = requestAnimationFrame(animateWheelScroll);
+      }
     }
 
     viewport.addEventListener("wheel", onWheel, { passive: false });
+    document.addEventListener("pointerdown", stopWheelScroll);
+    document.addEventListener("keydown", stopWheelScroll);
+    horizontal.addEventListener("change", stopWheelScroll);
     let frame = 0;
     let transition = 0;
     let cleanup = 0;
@@ -56,7 +101,10 @@ export default function Opening() {
     document.querySelectorAll("[data-reveal]").forEach((node) => observer.observe(node));
 
     function updatePreference(event) {
-      if (event.matches) stopOpening();
+      if (event.matches) {
+        stopOpening();
+        stopWheelScroll();
+      }
     }
 
     function skipOpening(event) {
@@ -90,7 +138,11 @@ export default function Opening() {
     return () => {
       stopOpening();
       observer.disconnect();
+      stopWheelScroll();
       viewport.removeEventListener("wheel", onWheel);
+      document.removeEventListener("pointerdown", stopWheelScroll);
+      document.removeEventListener("keydown", stopWheelScroll);
+      horizontal.removeEventListener("change", stopWheelScroll);
       motion.removeEventListener("change", updatePreference);
       document.removeEventListener("focusin", skipOpening);
       document.removeEventListener("keydown", skipOpening);
