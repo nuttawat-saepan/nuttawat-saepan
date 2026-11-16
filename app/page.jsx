@@ -1,22 +1,159 @@
-import Motion from './motion';
-const projects = [
- {id:'oned', name:'oneD', kind:'VIDEO PLAYBACK / CONTENT CMS', tags:'Pinia · Video · VTT', mark:'PLAY', description:'ปรับ Shorts Player และฟีด For You ฝั่งผู้ชม พร้อมเครื่องมือจัดการวิดีโอสำหรับทีมคอนเทนต์', detail:'แก้การเล่นคลิปถัดไปบน Safari, autoplay และ tap-to-unmute จัดการโฆษณาไม่โหลดหรือหมดเวลา ทำหน้ารายละเอียดวิดีโอและเพลย์ลิสต์ ปรับการอัปโหลด VTT / ZIP, validation เวลาถอดคอนเทนต์ และการจำแท็บด้วย Pinia'},
- {id:'thaithai',name:'ThaiThai',kind:'LIVE COMMERCE / SELLER EXPERIENCE',tags:'Flutter · Live Commerce',mark:'LIVE',description:'พัฒนาหน้าฝั่งผู้ขาย ตั้งแต่เตรียมไลฟ์ไปจนถึงดูผลลัพธ์หลังจบไลฟ์',detail:'ใช้ Flutter ทำ flow เตรียมไลฟ์ เลือกสินค้า ปักหมุดสินค้าระหว่างไลฟ์ และดูสถิติหลังจบไลฟ์'},
- {id:'go2',name:'Unitree Go2',kind:'ROBOTICS / SYSTEMS INTEGRATION',tags:'ROS 2 · Nav2 · FAST-LIO · MQTT',mark:'GO₂',description:'ระบบนำทางและรับภารกิจสำหรับหุ่นยนต์สี่ขา เชื่อมการรับรู้สภาพแวดล้อมกับการปฏิบัติภารกิจ',detail:'ใช้ Livox Mid-360 เก็บข้อมูล LiDAR, FAST-LIO ทำแผนที่และประมาณการเคลื่อนที่, Nav2 วางเส้นทาง และ MQTT รับภารกิจพร้อมรายงานความคืบหน้า'},
- {id:'depot',name:'Tank Depot',kind:'WEB / OPERATIONS',tags:'Inventory · Repair · Invoicing',mark:'DEPOT',description:'เว็บสำหรับงานจัดการแทงก์ในเดโป เชื่อมงานคลังกับกระบวนการซ่อมและเอกสาร',detail:'มีหน้าคลังแทงก์ การแจ้งปัญหา ทำใบประเมินค่าซ่อม และออกใบแจ้งหนี้'},
- {id:'beach',name:'Beach Robotics',kind:'AUTONOMOUS CLEANING / SOFTWARE',tags:'Robotics · Automation',mark:'CLEAN',description:'โปรเจกต์ซอฟต์แวร์สำหรับหุ่นยนต์ทำความสะอาดชายหาดอัตโนมัติ',detail:'รายละเอียดขอบเขตงาน ภาพการทดสอบ และเทคโนโลยีจะเพิ่มเติมเมื่อมีข้อมูลที่ยืนยันได้'}
+import Image from "next/image";
+import Opening from "./motion";
+
+const links = [
+  ["Profile", "#profile"],
+  ["Projects", "#projects"],
+  ["Techstack", "#techstack"],
+  ["Contact", "#contact"],
 ];
-function Letters({word}) {return word.split('').map((letter,i)=><span className="opening-letter-mask" key={i}><span className="opening-letter">{letter}</span></span>)}
-function Artwork({project}) {return <div className={'project-visual visual-'+project.id} aria-hidden="true"><div className="visual-grid"/><span className="visual-label">N—S / {project.kind}</span><div className="visual-orbit"/><strong>{project.mark}</strong><div className="visual-bars"><i/><i/><i/><i/><i/></div><span className="visual-foot">CONCEPT VISUAL — NOT A PRODUCT SCREENSHOT</span></div>}
-export default function Page(){return <>
-<Motion/>
-<div className="opening" aria-hidden="true"><div className="opening-stage"><div className="opening-changing">{['WEB','APPS','ROBOTICS','SOFTWARE'].map(word=><span className="opening-word" key={word}><Letters word={word}/></span>)}</div><div className="opening-design"><Letters word="ENGINEER"/></div></div><div className="opening-media"><img src="/assets/project-a.jpg" alt=""/><img src="/assets/project-b.jpg" alt=""/><video muted playsInline loop preload="auto" src="/assets/reference.mp4"/><img src="/assets/portrait.jpg" alt=""/></div></div>
-<header className="masthead"><a className="name" href="#top">NUTTAWAT SAEPAN<span>WEB / APPS / ROBOTICS<br/>SOFTWARE ENGINEER</span></a><nav aria-label="Main navigation"><a href="#work">WORK</a><a href="#profile">PROFILE</a><a href="#stack">STACK</a></nav><a className="contact-link" href="#contact">CONTACT ↗</a></header>
-<main>
-<section className="editorial-hero" aria-labelledby="role"><div className="portrait-space"><img src="/assets/portrait.jpg" alt="ภาพบุคคลอ้างอิงชั่วคราว รอเปลี่ยนเป็นภาพ Nuttawat"/><canvas aria-hidden="true"/></div><h1 id="role">{'SOFTWARE'.split('').map((l,i)=><span key={i}>{l}</span>)}<span className="sr-only"> Engineer</span></h1><p className="hero-bio">I BUILD WEB AND MOBILE APPS,<br/>FROM LIVE COMMERCE AND VIDEO<br/>PLATFORMS TO ROBOTICS SYSTEMS.</p><p className="hero-center-caption">SOFTWARE DEVELOPMENT<br/>& SYSTEMS INTEGRATION</p><a className="hero-monogram" href="#profile" aria-label="About Nuttawat">N—S</a><div className="hero-bottom-title" aria-hidden="true">{'ENGINEER'.split('').map((l,i)=><span key={i}>{l}</span>)}</div><p className="hero-side">FLUTTER INTERFACES.<br/>VIDEO PLAYBACK & CONTENT TOOLS.<br/>ROS 2 NAVIGATION & MQTT MISSIONS.</p><p className="hero-note">SELECTED WORK<br/>THAITHAI / ONED / UNITREE GO2</p><a className="hero-scroll" href="#work">EXPLORE WORK ↘</a></section>
-<section className="profile-section" id="profile" aria-labelledby="profile-title"><div className="profile-stage"><div className="profile-frame"><img src="/assets/portrait.jpg" alt="ภาพอ้างอิงชั่วคราวสำหรับจัดวาง Profile"/></div><div className="profile-copy"><p className="eyebrow">01 / THE PERSON BEHIND THE WORK</p><h2 id="profile-title">Connecting interfaces.<br/><em>Building systems.</em></h2><p>ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่หน้าจอที่ผู้ใช้สัมผัส ไปจนถึงการเชื่อมระบบเบื้องหลัง มีประสบการณ์กับ <a href="#work">Live Commerce และ Video Platform</a> เครื่องมือจัดการงาน และ <a href="#project-go2">ระบบหุ่นยนต์</a></p><p className="profile-small">WEB / APPS / ROBOTICS<br/>ภาพบุคคลชั่วคราวจาก Quintin Lodge — รอภาพจริง</p></div></div></section>
-<section className="projects-section" id="work" aria-labelledby="work-title"><div className="projects-stage"><h2 id="work-title" className="section-label">02 / SELECTED WORK</h2><div className="project-backdrops" aria-hidden="true">{projects.map(p=><div className="project-backdrop" key={p.id}><Artwork project={p}/></div>)}</div><div className="project-images" aria-hidden="true">{projects.map(p=><div className="project-image" key={p.id}><Artwork project={p}/></div>)}</div><div className="project-copy-window">{projects.map((p,i)=><article className="project-copy" key={p.id}><p className="eyebrow">0{i+1} / 05 — {p.kind}</p><h3>{p.name}</h3><p>{p.description}</p><p className="project-tags">{p.tags}</p><a href={'#project-'+p.id}>EXPLORE CONTRIBUTIONS ↗</a></article>)}</div><p className="project-scroll-note">SCROLL TO EXPLORE ↓</p></div></section>
-<section className="project-details" aria-label="Project contributions">{projects.map(p=><details id={'project-'+p.id} key={p.id}><summary><span>{p.name}</span><span>CONTRIBUTIONS +</span></summary><p>{p.detail}</p></details>)}</section>
-<section className="techstack" id="stack" aria-labelledby="stack-title"><div className="stack-art" aria-hidden="true"/><p className="section-label">03 / TOOLS & TECHNOLOGIES</p><h2 id="stack-title">Different tools.<br/><em>Connected systems.</em></h2><div className="marquee" aria-label="Flutter, Pinia, ROS 2, Nav2, FAST-LIO, MQTT"><div className="marquee-track">{[0,1].map(n=><div className="marquee-group" key={n} aria-hidden={n===1}>{['Flutter','Pinia','ROS 2','Nav2','FAST-LIO','MQTT'].map(t=><span key={t}>{t}</span>)}</div>)}</div></div><div className="stack-copy"><p>เลือกเครื่องมือให้เหมาะกับงาน ตั้งแต่หน้าจอ Flutter และการจัดการ state ด้วย Pinia ไปจนถึง navigation และ messaging สำหรับระบบหุ่นยนต์</p><a href="#work">SEE THEM IN PRACTICE ↗</a></div><span className="stack-line"/></section>
-</main><footer id="contact"><p className="eyebrow">LET’S CONNECT</p><h2>Make it work.<br/><em>Make it matter.</em></h2><p>NUTTAWAT SAEPAN / SOFTWARE ENGINEER</p><p className="contact-pending">ช่องทางติดต่อจะเพิ่มเมื่อได้รับข้อมูลจากเจ้าของพอร์ต</p><a href="#top">BACK TO TOP ↑</a><small>Portrait & loading reference media: <a href="https://www.quintinlodge.com/">Quintin Lodge</a> · Temporary layout assets</small></footer>
-</>}
+
+const projects = [
+  {
+    name: "oneD",
+    scope: "Video Platform & Content CMS",
+    contributions: [
+      ["Video playback", "ปรับ Shorts Player และฟีด For You แก้การเล่นคลิปถัดไปบน Safari ปรับ autoplay และ tap-to-unmute รวมถึงจัดการกรณีโฆษณาโหลดไม่สำเร็จหรือหมดเวลา"],
+      ["Content CMS", "ทำหน้ารายละเอียดวิดีโอและส่วนจัดการเพลย์ลิสต์ ปรับการอัปโหลดซับ VTT และไฟล์ ZIP เพิ่ม validation เวลาถอดคอนเทนต์ และปรับการจำแท็บด้วย Pinia"],
+    ],
+  },
+  {
+    name: "ThaiThai",
+    scope: "Live Commerce",
+    contributions: [
+      ["Seller flow", "ใช้ Flutter พัฒนาหน้าฝั่งผู้ขาย ตั้งแต่เตรียมไลฟ์และเลือกสินค้า ไปจนถึงปักหมุดสินค้าระหว่างไลฟ์และดูสถิติหลังจบไลฟ์"],
+    ],
+  },
+  {
+    name: "Unitree Go2",
+    scope: "Navigation & Mission System",
+    contributions: [
+      ["Mapping & navigation", "ใช้ Livox Mid-360 เก็บข้อมูล LiDAR ใช้ FAST-LIO ทำแผนที่และประมาณการเคลื่อนที่ และใช้ Nav2 วางเส้นทางให้หุ่นยนต์สี่ขา"],
+      ["Mission integration", "ใช้ MQTT รับภารกิจและรายงานความคืบหน้า"],
+    ],
+  },
+  {
+    name: "Tank Depot",
+    scope: "Operations Web App",
+    description: "เว็บจัดการแทงก์ในเดโป มีหน้าคลังแทงก์ ระบบแจ้งปัญหา การทำใบประเมินค่าซ่อม และการออกใบแจ้งหนี้",
+  },
+  {
+    name: "Autonomous Beach Cleaning Robot",
+    scope: "Robotics",
+    description: "โปรเจกต์ซอฟต์แวร์สำหรับหุ่นยนต์ทำความสะอาดชายหาดอัตโนมัติ",
+  },
+];
+
+const stack = [
+  ["Flutter", "ThaiThai · หน้าฝั่งผู้ขาย"],
+  ["Pinia", "oneD · การจำแท็บใน CMS"],
+  ["ROS 2", "ระบบหุ่นยนต์"],
+  ["Nav2", "Unitree Go2 · การวางเส้นทาง"],
+  ["FAST-LIO", "Unitree Go2 · การทำแผนที่และประมาณการเคลื่อนที่"],
+  ["MQTT", "Unitree Go2 · รับภารกิจและรายงานความคืบหน้า"],
+  ["Livox Mid-360", "Unitree Go2 · อุปกรณ์ LiDAR"],
+];
+
+export default function Home() {
+  return (
+    <>
+      <a className="skip-link" href="#main">ข้ามไปยังเนื้อหา</a>
+      <Opening />
+      <header className="site-header dark" id="top">
+        <div className="frame header-inner">
+          <a className="monogram" href="#home" aria-label="Nuttawat Saepan — Home">NS<span>.</span></a>
+          <nav aria-label="เมนูหลัก">
+            {links.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
+          </nav>
+        </div>
+      </header>
+
+      <main id="main">
+        <section className="hero dark" id="home" aria-labelledby="home-title">
+          <div className="frame hero-inner">
+            <div className="hero-top">
+              <p className="eyebrow role">Software Engineer</p>
+              <p className="eyebrow disciplines">Web / Apps / Robotics</p>
+            </div>
+            <h1 id="home-title" className="hero-name">
+              <span><span>Nuttawat</span></span>
+              <span><span>Saepan<span className="name-period">.</span></span></span>
+            </h1>
+            <div className="hero-bottom">
+              <p lang="en">I build web and mobile apps, from live commerce and video platforms to robotics systems.</p>
+              <a className="work-link" href="#projects">Explore projects <span aria-hidden="true">↘</span></a>
+            </div>
+          </div>
+        </section>
+
+        <section className="profile light" id="profile" aria-labelledby="profile-title">
+          <div className="frame profile-grid">
+            <div className="profile-copy">
+              <p className="eyebrow section-label">Profile</p>
+              <h2 id="profile-title">About me<span>.</span></h2>
+              <p>ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
+            </div>
+            <figure className="portrait">
+              <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, 38vw" />
+              <figcaption>Nuttawat Saepan</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section className="projects light" id="projects" aria-labelledby="projects-title">
+          <div className="frame">
+            <div className="section-heading" data-reveal>
+              <h2 id="projects-title">Projects<span>.</span></h2>
+              <span className="eyebrow project-count">05 Projects</span>
+            </div>
+            <ol className="project-list">
+              {projects.map((project, index) => (
+                <li key={project.name} className="project">
+                  <span className="project-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                  <div className="project-title">
+                    <h3>{project.name}</h3>
+                    <p>{project.scope}</p>
+                  </div>
+                  <div className="project-description">
+                    {project.description && <p>{project.description}</p>}
+                    {project.contributions?.map(([label, description]) => (
+                      <div key={label} className="contribution">
+                        <h4>{label}</h4>
+                        <p>{description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="techstack" id="techstack" aria-labelledby="stack-title">
+          <div className="frame stack-grid">
+            <h2 id="stack-title">Techstack<span>.</span></h2>
+            <dl className="stack-list">
+              {stack.map(([name, usage]) => <div key={name}><dt>{name}</dt><dd>{usage}</dd></div>)}
+            </dl>
+          </div>
+        </section>
+      </main>
+
+      <footer className="contact dark" id="contact" aria-labelledby="contact-title">
+        <div className="frame">
+          <div className="contact-main">
+            <div>
+              <h2 id="contact-title" data-reveal>Contact<span>.</span></h2>
+              <p>ช่องทางติดต่อจะเพิ่มเติมภายหลัง</p>
+            </div>
+            <a className="work-link" href="#top">Back to top <span aria-hidden="true">↑</span></a>
+          </div>
+          <div className="footer-meta">
+            <span>Nuttawat Saepan</span>
+            <span>Built with Next.js</span>
+          </div>
+        </div>
+      </footer>
+    </>
+  );
+}
