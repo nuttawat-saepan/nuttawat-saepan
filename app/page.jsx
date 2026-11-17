@@ -2,6 +2,7 @@ import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
 import { Icon, ProjectScreen, projects } from "./projects";
+import OneDPreview from "./preview";
 
 const stack = [
   ["Flutter", "ThaiThai · หน้าฝั่งผู้ขาย"],
@@ -61,22 +62,27 @@ export default function Home() {
                   <span>Selected</span><span>Projects</span>
                 </h2>
 
-                <div className="laptop" aria-hidden="true">
+                <div className="laptop">
                   <div className="laptop-lid">
                     <div className="laptop-screen">
-                      <video className="screen-intro" muted loop playsInline preload="none" poster="/assets/selected-projects.webp">
+                      <video className="screen-intro" muted loop playsInline preload="none" poster="/assets/selected-projects.webp" aria-hidden="true">
                         <source src="/assets/selected-projects.mp4" type="video/mp4" />
                       </video>
                       {projects.map((project, index) => (
-                        <div key={project.name} className="screen-case" data-case={index} data-screen={project.screen ?? "pending"} data-demo={project.concepts[0]?.demo}>
+                        <div key={project.name} className="screen-case" data-case={index} data-screen={project.screen ?? "pending"} data-demo={project.concepts[0]?.demo} aria-hidden="true">
                           <ProjectScreen project={project} index={index} />
                           {project.concepts.length > 0 && <span className="screen-chip">{project.concepts[0].title}</span>}
                         </div>
                       ))}
-                      <span className="screen-flash" />
+                      {projects.map((project, index) => project.preview && (
+                        <div key={project.name} className="app-preview" data-preview-for={index} role="region" aria-label={`${project.name} example app preview`} hidden>
+                          <OneDPreview />
+                        </div>
+                      ))}
+                      <span className="screen-flash" aria-hidden="true" />
                     </div>
                   </div>
-                  <div className="laptop-base" />
+                  <div className="laptop-base" aria-hidden="true" />
                 </div>
 
                 <ol className="case-list">
@@ -93,6 +99,12 @@ export default function Home() {
                       </article>
                       <div className="case-copy">
                         <p className="case-summary">{project.summary}</p>
+                        {project.preview && (
+                          <button type="button" className="preview-toggle" data-preview={index} aria-pressed="false">
+                            <span className="when-closed">Preview example app</span>
+                            <span className="when-open">Close preview</span>
+                          </button>
+                        )}
                         <p className="concept-label">{"// What's inside"}</p>
                         <div className="concept-grid" role="group" aria-label={`${project.name} concepts`}>
                           {project.concepts.map((concept, order) => (

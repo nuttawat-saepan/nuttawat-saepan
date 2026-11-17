@@ -10,6 +10,7 @@ export const projects = [
     period: "2025-09 → 2026-02",
     summary: "เขียนฟีเจอร์ Shorts เกือบทั้งหมด ตั้งแต่ player ฟีด ไปจนถึงโฆษณา",
     screen: "oned",
+    preview: true,
     concepts: [
       { icon: "play", title: "Single shared player", demo: "shared", text: "ใช้ video player ตัวเดียวทั้งฟีด ย้ายไปไว้ในช่องที่กำลังดู ช่องอื่นแสดงแค่ thumbnail" },
       { icon: "layers", title: "Windowed mounting", demo: "window", text: "mount เฉพาะคลิปปัจจุบัน ±1 ที่ไกลกว่านั้นทำลายทิ้ง ทั้ง player และช่องโฆษณา" },

@@ -24,6 +24,8 @@ export default function Opening() {
     const screens = [...stage.querySelectorAll(".screen-case")];
     const flash = stage.querySelector(".screen-flash");
     const caseButtons = [...stage.querySelectorAll(".case-button")];
+    const previews = [...stage.querySelectorAll(".app-preview")];
+    const previewToggles = [...stage.querySelectorAll(".preview-toggle")];
     const themedPanels = [...viewport.querySelectorAll(":scope > main > [data-theme], :scope > footer[data-theme]")];
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
@@ -58,8 +60,18 @@ export default function Opening() {
       flash.animate([{ opacity: 0 }, { opacity: first ? 0.55 : 0.35 }, { opacity: 0 }], { duration: first ? 600 : 420, easing: "ease-out" });
     }
 
+    function setPreview(index) {
+      const target = String(index);
+      previews.forEach((preview) => { preview.hidden = preview.dataset.previewFor !== target; });
+      previewToggles.forEach((toggle) => toggle.setAttribute("aria-pressed", String(toggle.dataset.preview === target)));
+      if (index < 0) return;
+      if (!horizontal.matches) stage.querySelector(".laptop").scrollIntoView({ behavior: motion.matches ? "auto" : "smooth", block: "center" });
+      if (!motion.matches) flash.animate([{ opacity: 0 }, { opacity: 0.4 }, { opacity: 0 }], { duration: 450, easing: "ease-out" });
+    }
+
     function setCase(index) {
       if (index === activeCase) return;
+      setPreview(-1);
       const first = activeCase === -1;
       activeCase = index;
       cases.forEach((item, order) => item.toggleAttribute("data-active", order === index));
@@ -92,6 +104,7 @@ export default function Opening() {
         stageMode = mode;
         stage.dataset.mode = mode;
         if (mode === "case") activeCase = -1;
+        else setPreview(-1);
         updateVideo();
       }
       setCase(clamp(Math.floor((distance - metrics.dive) / metrics.step), 0, cases.length - 1));
@@ -116,8 +129,15 @@ export default function Opening() {
     }
 
     function onConceptClick(event) {
+      const toggle = event.target.closest(".preview-toggle");
+      if (toggle) {
+        setPreview(toggle.getAttribute("aria-pressed") === "true" ? -1 : Number(toggle.dataset.preview));
+        return;
+      }
       const button = event.target.closest(".concept");
-      if (button) selectConcept(button);
+      if (!button) return;
+      setPreview(-1);
+      selectConcept(button);
     }
 
     function stepCase(event) {
@@ -191,7 +211,7 @@ export default function Opening() {
         return;
       }
 
-      const panel = event.target.closest(".case-copy, section, footer");
+      const panel = event.target.closest(".case-copy, .app-feed, section, footer");
       if (panel && panel.id !== "home") {
         const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
         if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) {
