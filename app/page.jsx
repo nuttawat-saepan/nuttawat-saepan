@@ -1,46 +1,7 @@
 import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
-
-const projects = [
-  {
-    name: "oneD",
-    scope: "Video Platform & Content CMS",
-    stack: "Pinia",
-    contributions: [
-      ["Video playback", "ปรับ Shorts Player และฟีด For You แก้การเล่นคลิปถัดไปบน Safari ปรับ autoplay และ tap-to-unmute รวมถึงจัดการกรณีโฆษณาโหลดไม่สำเร็จหรือหมดเวลา"],
-      ["Content CMS", "ทำหน้ารายละเอียดวิดีโอและส่วนจัดการเพลย์ลิสต์ ปรับการอัปโหลดซับ VTT และไฟล์ ZIP เพิ่ม validation เวลาถอดคอนเทนต์ และปรับการจำแท็บด้วย Pinia"],
-    ],
-  },
-  {
-    name: "ThaiThai",
-    scope: "Live Commerce",
-    stack: "Flutter",
-    contributions: [
-      ["Seller flow", "ใช้ Flutter พัฒนาหน้าฝั่งผู้ขาย ตั้งแต่เตรียมไลฟ์และเลือกสินค้า ไปจนถึงปักหมุดสินค้าระหว่างไลฟ์และดูสถิติหลังจบไลฟ์"],
-    ],
-  },
-  {
-    name: "Unitree Go2",
-    scope: "Navigation & Mission System",
-    stack: "Livox Mid-360 · FAST-LIO · Nav2 · MQTT",
-    contributions: [
-      ["Mapping & navigation", "ใช้ Livox Mid-360 เก็บข้อมูล LiDAR ใช้ FAST-LIO ทำแผนที่และประมาณการเคลื่อนที่ และใช้ Nav2 วางเส้นทางให้หุ่นยนต์สี่ขา"],
-      ["Mission integration", "ใช้ MQTT รับภารกิจและรายงานความคืบหน้า"],
-    ],
-  },
-  {
-    name: "Tank Depot",
-    scope: "Operations Web App",
-    description: "เว็บจัดการแทงก์ในเดโป มีหน้าคลังแทงก์ ระบบแจ้งปัญหา การทำใบประเมินค่าซ่อม และการออกใบแจ้งหนี้",
-  },
-  {
-    name: "Autonomous Beach Cleaning Robot",
-    shortName: "Beach Robot",
-    scope: "Robotics",
-    description: "โปรเจกต์ซอฟต์แวร์สำหรับหุ่นยนต์ทำความสะอาดชายหาดอัตโนมัติ",
-  },
-];
+import { Icon, ProjectScreen, projects } from "./projects";
 
 const stack = [
   ["Flutter", "ThaiThai · หน้าฝั่งผู้ขาย"],
@@ -52,7 +13,8 @@ const stack = [
   ["Livox Mid-360", "Unitree Go2 · อุปกรณ์ LiDAR"],
 ];
 
-const total = String(projects.length).padStart(2, "0");
+const pad = (value) => String(value).padStart(2, "0");
+const total = pad(projects.length);
 
 export default function Home() {
   return (
@@ -106,10 +68,9 @@ export default function Home() {
                         <source src="/assets/selected-projects.mp4" type="video/mp4" />
                       </video>
                       {projects.map((project, index) => (
-                        <div key={project.name} className="screen-case" data-case={index}>
-                          <span className="screen-index">{String(index + 1).padStart(2, "0")}</span>
-                          <span className="screen-name">{project.shortName ?? project.name}</span>
-                          <span className="screen-note">Screen recording coming soon</span>
+                        <div key={project.name} className="screen-case" data-case={index} data-screen={project.screen ?? "pending"} data-demo={project.concepts[0]?.demo}>
+                          <ProjectScreen project={project} index={index} />
+                          {project.concepts.length > 0 && <span className="screen-chip">{project.concepts[0].title}</span>}
                         </div>
                       ))}
                       <span className="screen-flash" />
@@ -123,21 +84,35 @@ export default function Home() {
                     <li key={project.name} className="case" data-case={index}>
                       <article className="ticket">
                         <span className="punch" aria-hidden="true" />
-                        <h3>{project.name}</h3>
+                        <h3 className={project.name.length > 16 ? "is-long" : undefined}>{project.name}</h3>
                         <dl className="ticket-rows">
                           <div><dt>Scope</dt><dd>{project.scope}</dd></div>
-                          {project.stack && <div><dt>Stack</dt><dd>{project.stack}</dd></div>}
+                          <div><dt>Stack</dt><dd>{project.stack}</dd></div>
+                          <div><dt>Period</dt><dd>{project.period}</dd></div>
                         </dl>
                       </article>
                       <div className="case-copy">
-                        {project.description && <p>{project.description}</p>}
-                        {project.contributions?.map(([label, description]) => (
-                          <div key={label} className="contribution">
-                            <h4>{label}</h4>
-                            <p>{description}</p>
-                          </div>
-                        ))}
-                        <p className="case-count" aria-hidden="true">{String(index + 1).padStart(2, "0")} / {total}</p>
+                        <p className="case-summary">{project.summary}</p>
+                        <p className="concept-label">{"// What's inside"}</p>
+                        <div className="concept-grid" role="group" aria-label={`${project.name} concepts`}>
+                          {project.concepts.map((concept, order) => (
+                            <button key={concept.title} type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} aria-label={concept.title}>
+                              <Icon name={concept.icon} />
+                              <span className="concept-num" aria-hidden="true">{order + 1}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="concept-detail" aria-live="polite">
+                          {project.concepts.map((concept, order) => (
+                            <div key={concept.title} data-concept-detail={order} hidden={order !== 0}>
+                              <p className="concept-index">Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
+                              <h4>{concept.title}</h4>
+                              <p>{concept.text}</p>
+                              {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}
+                            </div>
+                          ))}
+                        </div>
+                        <p className="case-count" aria-hidden="true">{pad(index + 1)} / {total}</p>
                       </div>
                     </li>
                   ))}
@@ -148,7 +123,7 @@ export default function Home() {
                     <span className="case-circle" aria-hidden="true">←</span> previous case
                   </button>
                   <button type="button" className="case-button is-next" data-step="1">
-                    <span className="case-circle" aria-hidden="true">→</span> next case
+                    next case <span className="case-circle" aria-hidden="true">→</span>
                   </button>
                 </div>
               </div>

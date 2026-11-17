@@ -97,6 +97,29 @@ export default function Opening() {
       setCase(clamp(Math.floor((distance - metrics.dive) / metrics.step), 0, cases.length - 1));
     }
 
+    function selectConcept(button) {
+      const item = button.closest(".case");
+      const screen = screens[cases.indexOf(item)];
+      const order = button.dataset.concept;
+      item.querySelectorAll(".concept").forEach((concept) => concept.setAttribute("aria-pressed", String(concept === button)));
+      let shown;
+      item.querySelectorAll("[data-concept-detail]").forEach((detail) => {
+        detail.hidden = detail.dataset.conceptDetail !== order;
+        if (!detail.hidden) shown = detail;
+      });
+      if (button.dataset.demo) screen.dataset.demo = button.dataset.demo;
+      const chip = screen.querySelector(".screen-chip");
+      if (chip) chip.textContent = button.getAttribute("aria-label");
+      if (motion.matches) return;
+      shown.animate([{ opacity: 0, transform: "translateY(.5rem)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2, .8, .2, 1)" });
+      if (stageMode === "case") flash.animate([{ opacity: 0 }, { opacity: 0.2 }, { opacity: 0 }], { duration: 320, easing: "ease-out" });
+    }
+
+    function onConceptClick(event) {
+      const button = event.target.closest(".concept");
+      if (button) selectConcept(button);
+    }
+
     function stepCase(event) {
       const next = activeCase + Number(event.currentTarget.dataset.step);
       const trackStart = viewport.scrollLeft + track.getBoundingClientRect().left - viewport.getBoundingClientRect().left;
@@ -116,6 +139,7 @@ export default function Opening() {
     viewportResize.observe(viewport);
     viewport.addEventListener("scroll", updateScrollEffects, { passive: true });
     caseButtons.forEach((button) => button.addEventListener("click", stepCase));
+    stage.addEventListener("click", onConceptClick);
     measureTrack();
     updateScrollEffects();
 
@@ -272,6 +296,7 @@ export default function Opening() {
       stage.style.removeProperty("--dive");
       viewport.removeEventListener("scroll", updateScrollEffects);
       caseButtons.forEach((button) => button.removeEventListener("click", stepCase));
+      stage.removeEventListener("click", onConceptClick);
       sidebar.dataset.theme = "paper";
       viewport.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
