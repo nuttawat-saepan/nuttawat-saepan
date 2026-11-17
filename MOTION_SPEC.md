@@ -1,3 +1,26 @@
+# Swiss grotesk + laptop dive — 17 November 2026
+
+The user chose direction B (Swiss grotesk) and the laptop-dive Projects section. This supersedes the colour, type and Projects-panel decisions below; Loading timing, horizontal scrolling, smooth wheel and the mobile vertical layout stay as specified.
+
+- Palette: paper `#f1f0eb`, ink `#0e0e0e`, mute `#55554f`, one accent red `#ff3b1f` (name dot, punch hole, counters, Contact panel). The blue-violet theme is retired (kept in `git stash` as "backup: apple-contrast theme…").
+- Type: Inter Tight 400/500/600 for everything Latin; IBM Plex Sans Thai for Thai copy.
+- Section rhythm: Home paper → Profile paper → Projects ink → Techstack paper → Contact red. Section labels read (01) Quick intro, (02) Selected projects, (03) Tools, (04) Contact.
+- Sidebar: follows the theme of the panel that covers the viewport's left edge, fading background and text over 500 ms. This replaces the earlier "dark until Profile fully enters" rule, since Home is now paper.
+- Home: name across three ruled columns, red dot after Saepan; bottom row is role / disciplines + Scroll / hero sentence above a hairline. Loading counter is ink with a red %.
+- Projects (desktop): a sticky stage inside a track of `panel × (1 + 0.7 + 0.45 × cases)`.
+  - Dive (first 0.7 viewport of travel, smoothstep): the laptop grows from 0.2 to full scale between SELECTED and PROJECTS while the words slide out and fade; the laptop screen plays the placeholder montage.
+  - Case mode (each further 0.45 viewport = one project): ticket card top-right (name, scope, stack), contributions left, prev / next bottom-left. Switching drops the ticket in (750 ms overshoot), staggers the copy (70 ms), and flashes the screen. Prev on case 1 zooms back out; next on case 5 scrolls to Techstack. Fully reversible because it is driven by scroll position, not a wheel lock.
+  - Screen content is a labelled placeholder ("Screen recording coming soon") until real recordings arrive.
+- Concepts (user's term, replaces "perks"): each case lists clickable round concept nodes under "// What's inside", inspired by game perk icons. The selected node is a paper disc with a red ring and red number badge. Clicking swaps the detail (Concept NN, title, Thai text; 320 ms rise), sets the laptop screen's `data-demo` state, updates the red chip on the screen, and flashes the screen lightly. Nodes are real buttons with `aria-pressed`; the detail region is `aria-live`.
+  - Screens by project: oneD and ThaiThai show small UI mocks whose state follows the concept (oneD: feed, shared player, next clip, like, data panel; ThaiThai: a phone with feed, cache, checkout, pipeline, live, marketplace and editor states). Unitree Go2, LCS and Beachboy show a "Video preview coming soon" panel until the user's AI-generated videos arrive; concepts then get an `at` timestamp so a click seeks the video.
+  - Content comes from `PROJECT_CONCEPTS.md` (the user's git-verified notes), rewritten for the page in `app/projects.jsx` without commit hashes, file paths, teammate work or unmeasured numbers. Each concept has a title, a Thai description and, where the notes give one, a Learning line. Precaching the next clip's first segment belongs to ThaiThai, not oneD. LCS is the Tank Depot project; Beachboy is the beach cleaning robot.
+  - The ticket shows Scope, Stack and Period. Previous case sits bottom-left, next case bottom-right.
+- Projects (mobile): laptop with the montage under the heading, then the tickets, concept nodes and details stacked.
+- Reduced motion: no opening, no dive (track has no dive length), cases switch without animation.
+- Pending from the user: screen recordings per project, Tank Depot and Beach Robot stack, Beach Robot responsibilities, contact links, case-study content (deferred).
+
+---
+
 # Editorial redesign — 16 November 2026
 
 This specification applies to the editorial redesign. The previous design and reference history follow below.
