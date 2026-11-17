@@ -13,9 +13,9 @@ export default function Sidebar() {
   }
 
   return (
-    <header className="site-header dark" id="top">
+    <header className="site-header" id="top" data-theme="paper">
       <div className="frame header-inner">
-        <a className="monogram" href="#home" aria-label="Nuttawat Saepan — Home">NS<span>.</span></a>
+        <a className="monogram" href="#home" aria-label="Nuttawat Saepan — Home">NS<i className="dot" aria-hidden="true">.</i></a>
         <nav aria-label="เมนูหลัก">
           {sections.map(([label, href]) => <a key={href} href={href}>{label}</a>)}
         </nav>

@@ -17,35 +17,110 @@ export default function Opening() {
     const number = counter.current;
     const viewport = document.querySelector(".portfolio-viewport");
     const sidebar = document.querySelector(".site-header");
-    const workOpening = document.querySelector(".work-opening");
-    const workVideo = workOpening.querySelector("video");
-    let videoVisible = false;
+    const track = document.querySelector(".work-track");
+    const stage = track.querySelector(".work-stage");
+    const workVideo = stage.querySelector(".screen-intro");
+    const cases = [...stage.querySelectorAll(".case")];
+    const screens = [...stage.querySelectorAll(".screen-case")];
+    const flash = stage.querySelector(".screen-flash");
+    const caseButtons = [...stage.querySelectorAll(".case-button")];
+    const themedPanels = [...viewport.querySelectorAll(":scope > main > [data-theme], :scope > footer[data-theme]")];
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
+    const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
+    let videoVisible = false;
+    let stageMode = "intro";
+    let activeCase = -1;
+    let metrics = { dive: 0, step: 1 };
 
-    function updateScrollEffects() {
-      const progress = horizontal.matches && viewport.clientWidth
-        ? Math.max(0, Math.min(viewport.scrollLeft / viewport.clientWidth, 1))
-        : 0;
-      const blend = motion.matches ? Number(progress >= 0.5) : progress;
-
-      sidebar.style.setProperty("--sidebar-blend", `${blend * 100}%`);
-      sidebar.toggleAttribute("data-light-text-background", blend >= 0.34);
-
-      const distance = viewport.getBoundingClientRect().left - workOpening.getBoundingClientRect().left;
-      const workProgress = horizontal.matches && !motion.matches && viewport.clientWidth
-        ? Math.max(0, Math.min(distance / (viewport.clientWidth * 0.68), 1))
-        : 0;
-      const expansion = workProgress * workProgress * (3 - 2 * workProgress);
-      workOpening.style.setProperty("--work-expand", expansion);
+    function measureTrack() {
+      const style = getComputedStyle(track);
+      const width = viewport.clientWidth;
+      metrics = {
+        dive: (parseFloat(style.getPropertyValue("--dive-len")) || 0) * width,
+        step: Math.max(1, (parseFloat(style.getPropertyValue("--case-len")) || 0) * width),
+      };
     }
 
-    const viewportResize = new ResizeObserver(updateScrollEffects);
+    function playCaseIn(index, first) {
+      const item = cases[index];
+      const easing = "cubic-bezier(.2, .8, .2, 1)";
+      item.querySelector(".ticket").animate([
+        { opacity: 0, transform: "translateY(-3.5rem) rotate(-6deg)" },
+        { offset: 0.7, opacity: 1, transform: "translateY(.4rem) rotate(1.2deg)" },
+        { opacity: 1, transform: "none" },
+      ], { duration: 750, delay: first ? 120 : 0, easing, fill: "backwards" });
+      [...item.querySelector(".case-copy").children].forEach((child, order) => {
+        child.animate([
+          { opacity: 0, transform: "translateY(.8rem)" },
+          { opacity: 1, transform: "none" },
+        ], { duration: 550, delay: (first ? 220 : 80) + order * 70, easing, fill: "backwards" });
+      });
+      flash.animate([{ opacity: 0 }, { opacity: first ? 0.55 : 0.35 }, { opacity: 0 }], { duration: first ? 600 : 420, easing: "ease-out" });
+    }
+
+    function setCase(index) {
+      if (index === activeCase) return;
+      const first = activeCase === -1;
+      activeCase = index;
+      cases.forEach((item, order) => item.toggleAttribute("data-active", order === index));
+      screens.forEach((screen, order) => screen.toggleAttribute("data-active", order === index));
+      if (stageMode === "case" && !motion.matches) playCaseIn(index, first);
+    }
+
+    function updateScrollEffects() {
+      if (!horizontal.matches) {
+        sidebar.dataset.theme = "paper";
+        stage.style.removeProperty("--dive");
+        stageMode = "intro";
+        stage.dataset.mode = stageMode;
+        return;
+      }
+
+      const edge = viewport.getBoundingClientRect().left + 1;
+      let theme = "paper";
+      for (const panel of themedPanels) {
+        if (panel.getBoundingClientRect().left <= edge) theme = panel.dataset.theme;
+      }
+      sidebar.dataset.theme = theme;
+
+      const distance = edge - 1 - track.getBoundingClientRect().left;
+      const progress = metrics.dive > 0 ? clamp(distance / metrics.dive, 0, 1) : 1;
+      stage.style.setProperty("--dive", (progress * progress * (3 - 2 * progress)).toFixed(4));
+
+      const mode = progress >= 0.999 ? "case" : "intro";
+      if (mode !== stageMode) {
+        stageMode = mode;
+        stage.dataset.mode = mode;
+        if (mode === "case") activeCase = -1;
+        updateVideo();
+      }
+      setCase(clamp(Math.floor((distance - metrics.dive) / metrics.step), 0, cases.length - 1));
+    }
+
+    function stepCase(event) {
+      const next = activeCase + Number(event.currentTarget.dataset.step);
+      const trackStart = viewport.scrollLeft + track.getBoundingClientRect().left - viewport.getBoundingClientRect().left;
+      let target = trackStart + metrics.dive + next * metrics.step + metrics.step * 0.35;
+      if (next < 0) target = trackStart;
+      if (next >= cases.length) target = trackStart + track.offsetWidth;
+      stopWheelScroll();
+      viewport.scrollTo({ left: target, behavior: motion.matches ? "instant" : "smooth" });
+    }
+
+    function onResize() {
+      measureTrack();
+      updateScrollEffects();
+    }
+
+    const viewportResize = new ResizeObserver(onResize);
     viewportResize.observe(viewport);
     viewport.addEventListener("scroll", updateScrollEffects, { passive: true });
+    caseButtons.forEach((button) => button.addEventListener("click", stepCase));
+    measureTrack();
     updateScrollEffects();
 
     function updateVideo() {
-      if (videoVisible && !motion.matches) {
+      if (videoVisible && !motion.matches && stageMode !== "case") {
         workVideo.play().catch(() => {});
       } else {
         workVideo.pause();
@@ -92,8 +167,8 @@ export default function Opening() {
         return;
       }
 
-      const panel = event.target.closest(".project, section, footer");
-      if (panel) {
+      const panel = event.target.closest(".case-copy, section, footer");
+      if (panel && panel.id !== "home") {
         const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
         if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) {
           stopWheelScroll();
@@ -118,7 +193,7 @@ export default function Opening() {
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
-    horizontal.addEventListener("change", updateScrollEffects);
+    horizontal.addEventListener("change", onResize);
     let frame = 0;
     let transition = 0;
     let cleanup = 0;
@@ -142,7 +217,7 @@ export default function Opening() {
     document.querySelectorAll("[data-reveal]").forEach((node) => observer.observe(node));
 
     function updatePreference(event) {
-      updateScrollEffects();
+      onResize();
       updateVideo();
       if (event.matches) {
         stopOpening();
@@ -194,15 +269,15 @@ export default function Opening() {
       viewportResize.disconnect();
       workObserver.disconnect();
       workVideo.pause();
-      workOpening.style.removeProperty("--work-expand");
+      stage.style.removeProperty("--dive");
       viewport.removeEventListener("scroll", updateScrollEffects);
-      sidebar.style.removeProperty("--sidebar-blend");
-      sidebar.removeAttribute("data-light-text-background");
+      caseButtons.forEach((button) => button.removeEventListener("click", stepCase));
+      sidebar.dataset.theme = "paper";
       viewport.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
       document.removeEventListener("keydown", stopWheelScroll);
       horizontal.removeEventListener("change", stopWheelScroll);
-      horizontal.removeEventListener("change", updateScrollEffects);
+      horizontal.removeEventListener("change", onResize);
       motion.removeEventListener("change", updatePreference);
       document.removeEventListener("focusin", skipOpening);
       document.removeEventListener("keydown", skipOpening);
@@ -212,7 +287,7 @@ export default function Opening() {
   return (
     <div ref={overlay} className="opening" aria-hidden="true" hidden>
       <div className="frame opening-inner">
-        
+
                 <div className="opening-count" ref={counter}>
           {[100, 10, 1].map((place) => (
             <span className="digit-window" data-place={place} key={place}>
