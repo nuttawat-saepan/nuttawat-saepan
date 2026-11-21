@@ -1,3 +1,14 @@
+# Fullscreen navigation — 17 November 2026
+
+User selected concept 1 from the proposed navigation mockups. The user subsequently corrected the origin: on desktop the menu begins at the right boundary of the left sidebar and reveals from left to right across the remaining viewport (600 ms), keeping the rail visible. The panel uses a right-edge clip reveal so it never sweeps across the sidebar. Five masked labels rise from below with 65 ms stagger and a 170 ms initial delay. Closing retracts the panel toward the sidebar. These are implementation timings chosen for this version.
+
+- The desktop rail opens a dark menu covering the content area. Mobile uses a hamburger in the top bar and a left-to-right reveal across the full viewport. Links keep the existing Home / Profile / Projects / Techstack / Contact destinations.
+- A native modal dialog provides focus containment, background inertness, Escape dismissal and focus restoration. An explicit close button remains visible in the menu. Selecting a section closes the dialog and follows the section anchor.
+- Current hash destination is accented red on opening. Hover / keyboard focus reveals an underline and arrow.
+- Reduced motion removes transitions and stagger. Short viewports allow menu scrolling.
+
+---
+
 # Swiss grotesk + laptop dive — 17 November 2026
 
 The user chose direction B (Swiss grotesk) and the laptop-dive Projects section. This supersedes the colour, type and Projects-panel decisions below; Loading timing, horizontal scrolling, smooth wheel and the mobile vertical layout stay as specified.
