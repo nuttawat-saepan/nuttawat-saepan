@@ -188,29 +188,64 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .contact-main p { margin-block-start: 1.2rem; font-family: var(--thai); color: var(--sub); }
 .footer-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; padding-block: 1.25rem; border-block-start: 1px solid var(--rule); font-size: .76rem; font-weight: 500; }
 
-/* Opening counter */
-.opening { position: fixed; inset: 0; z-index: 20; color: var(--paper); background: var(--ink); pointer-events: none; transition: transform 460ms var(--ease); }
-.opening[hidden] { display: none; }
-.opening-inner { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: 4.2dvh 5dvh; }
-.opening-count { display: flex; align-items: center; font: 600 clamp(7rem, 22vw, 24rem)/1 var(--sans); letter-spacing: -.07em; }
+/* Opening counter. The server renders <html data-opening="loading">, so the first paint is already
+   the loader, with the rail in ink and the Home copy held back. */
+.opening { position: fixed; inset: 0; z-index: 20; color: var(--paper); background: var(--ink); pointer-events: none; clip-path: inset(0); animation: opening-failsafe 0s 9s forwards; }
+.opening[hidden], :root:not([data-opening]) .opening { display: none; }
+.opening-inner { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: calc(4.5rem + 2rem) 5dvh; }
+.opening-mask { overflow: clip; padding-block: .02em .1em; }
+.opening-count { display: flex; align-items: center; font: 600 clamp(3.4rem, 17vw, 8rem)/1 var(--sans); letter-spacing: -.065em; }
 .digit-window { display: block; width: .56em; height: 1em; overflow: hidden; transition: width 180ms var(--ease), opacity 180ms; }
 .digit-window[data-place="100"], .digit-window[data-place="10"] { width: 0; opacity: 0; }
 .digit-reel { display: block; will-change: transform; }
 .digit { display: block; height: 1em; line-height: 1; text-align: center; }
 .opening-percent { margin-inline-start: .05em; font-size: .65em; color: var(--red); }
-.opening-caption { align-self: end; font-size: clamp(1rem, 1.7vw, 2rem); font-weight: 500; color: var(--mute-on-ink); }
-[data-opening="revealing"] .opening { transform: translateY(-100%); }
-[data-opening="counting"] .hero-name > span > span { transform: translateY(105%); }
-[data-opening="revealing"] .hero-name > span > span { animation: name-in 650ms var(--ease) backwards; }
-[data-opening="revealing"] .hero-name > span + span > span { animation-delay: 60ms; }
-[data-opening="revealing"] :is(.hero-top, .hero-bottom) > * { animation: hero-copy-in 420ms var(--ease) 160ms backwards; }
+.opening-caption { align-self: end; font-size: clamp(1rem, 1.7vw, 2rem); font-weight: 500; color: var(--mute-on-ink); transition: opacity 250ms; }
+
+/* Loader timeline: count in (700 ms) → count (2.8 s, ease-in-out) → hold 450 ms
+   → digits roll up (350 ms) → ink wipes off bottom-to-top (650 ms) → Home enters in sequence. */
+[data-opening="loading"] .opening-count { transform: translateY(110%); }
+[data-opening="loading"] .opening-caption { opacity: 0; }
+[data-opening="counting"] .opening-count { animation: count-in 700ms var(--ease) 100ms backwards; }
+[data-opening="counting"] .opening-caption { animation: fade-in 500ms ease 250ms backwards; }
+:is([data-opening="exiting"], [data-opening="revealing"]) .opening-count { transform: translateY(-110%); transition: transform 350ms cubic-bezier(.5, 0, .75, 0); }
+:is([data-opening="exiting"], [data-opening="revealing"]) .opening-caption { opacity: 0; }
+[data-opening="revealing"] .opening { clip-path: inset(0 0 100% 0); transition: clip-path 650ms cubic-bezier(.65, 0, .35, 1); }
+:root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) .site-header { --bg: var(--ink); --fg: var(--paper); --sub: var(--mute-on-ink); --rule: rgb(241 240 235 / .18); }
+
+:root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) .hero-name > span > span { transform: translateY(105%); animation: show-late 0s 9s forwards; }
+:root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) :is(.role, .disciplines, .hero-scroll, .hero-bottom p) { opacity: 0; animation: show-late 0s 9s forwards; }
+[data-opening="revealing"] .hero-name > span > span { animation: name-in 750ms var(--ease) 500ms backwards; }
+[data-opening="revealing"] .hero-name > span + span > span { animation-delay: 700ms; }
+[data-opening="revealing"] .hero-inner { animation: grid-in 800ms var(--ease) 250ms backwards; }
+[data-opening="revealing"] :is(.role, .disciplines, .hero-scroll) { animation: hero-copy-in 500ms var(--ease) 250ms backwards; }
+[data-opening="revealing"] .disciplines { animation-delay: 320ms; }
+[data-opening="revealing"] .hero-scroll { animation-delay: 390ms; }
+[data-opening="revealing"] .hero-bottom p { animation: hero-copy-in 600ms var(--ease) 900ms backwards; }
+@keyframes count-in { from { transform: translateY(110%); } }
+@keyframes fade-in { from { opacity: 0; } }
 @keyframes name-in { from { transform: translateY(105%); } }
-@keyframes hero-copy-in { from { opacity: 0; transform: translateY(.5rem); } }
+@keyframes hero-copy-in { from { opacity: 0; transform: translateY(.6rem); } }
+@keyframes grid-in { from { background-size: 1px 0%, 1px 0%; } }
+@keyframes show-late { to { opacity: 1; transform: none; } }
+@keyframes opening-failsafe { to { visibility: hidden; } }
+
+/* Profile enters once, when most of the panel is in view */
+:root[data-motion] .profile :is(.section-label, .profile-intro, .profile-foot) { opacity: 0; transform: translateY(1.2rem); transition: opacity 600ms var(--ease), transform 700ms var(--ease); }
+:root[data-motion] .profile .portrait { clip-path: inset(100% 0 0 0); transition: clip-path 800ms cubic-bezier(.65, 0, .35, 1) 250ms; }
+:root[data-motion] .profile .portrait img { transform: scale(1.08); transition: transform 1100ms var(--ease) 250ms; }
+:root[data-motion] .profile[data-entered] :is(.section-label, .profile-intro, .profile-foot) { opacity: 1; transform: none; }
+:root[data-motion] .profile[data-entered] .profile-intro { transition-delay: 100ms; }
+:root[data-motion] .profile[data-entered] .profile-foot { transition-delay: 550ms; }
+:root[data-motion] .profile[data-entered] .portrait { clip-path: inset(0); }
+:root[data-motion] .profile[data-entered] .portrait img { transform: none; }
+.profile-foot { display: grid; gap: 2rem; justify-items: start; }
+.portrait-caption { font-size: .72rem; font-weight: 500; line-height: 1.4; letter-spacing: .04em; text-transform: uppercase; color: var(--sub); }
 .reveal-in { animation: section-in 300ms var(--ease) both; }
 @keyframes section-in { from { opacity: .55; transform: translateY(.65rem); } }
 
 @media (min-width: 900px) and (min-height: 600px) {
-  :root { --rail: round(clamp(3.65rem, 9.25dvh, 7rem), 1px); --panel: calc(100vw - var(--rail)); --chapter-pad: clamp(2rem, 4.7vw, 6.25rem); }
+  :root { --rail: round(clamp(3.65rem, 9.25dvh, 7rem), 1px); --panel: calc(100vw - var(--rail)); --name-size: min(calc(var(--panel) * .155), 25dvh); --chapter-pad: clamp(2rem, 4.7vw, 6.25rem); }
   html { overflow: hidden; }
 
   .site-header {
@@ -293,7 +328,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     background-origin: content-box;
     background-clip: content-box;
   }
-  .hero-name { grid-column: 1 / -1; grid-row: 1; align-self: start; font-size: min(calc(var(--panel) * .205), 33dvh); line-height: .82; }
+  .hero-name { grid-column: 1 / -1; grid-row: 1; align-self: start; font-size: var(--name-size); line-height: .82; }
   .hero-top, .hero-bottom { display: contents; }
   .role, .disciplines, .hero-bottom p, .hero-scroll {
     grid-row: 2;
@@ -305,8 +340,19 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   }
   .role { grid-column: 1; padding-inline-end: 1.5rem; }
   .disciplines { grid-column: 2; padding-inline: 1.25rem; }
-  .hero-bottom p { grid-column: 3; max-width: none; padding-inline-start: 1.25rem; }
-  .hero-scroll { grid-column: 2; justify-self: end; padding-inline-end: 1.25rem; border-block-start: 0; }
+  .hero-scroll { grid-column: 3; justify-self: stretch; justify-content: flex-end; }
+  .hero-bottom p {
+    grid-column: 3;
+    grid-row: 1;
+    max-width: 24em;
+    margin-block-start: calc(var(--name-size) * .1);
+    padding: 0 0 0 1.25rem;
+    border-block-start: 0;
+    color: var(--fg);
+    font-size: clamp(1.05rem, 1.45vw, 1.75rem);
+    line-height: 1.32;
+    letter-spacing: -.015em;
+  }
 
   /* Profile: indented copy column, portrait anchored bottom, one viewport tall */
   .portfolio-viewport .profile-grid {
@@ -324,7 +370,8 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .profile-grid .section-label, .profile-intro { grid-column: 1 / -1; }
   .profile-intro { max-width: min(52vw, 46rem); font-size: clamp(1.2rem, min(2.55vw, 4.3dvh), 2.5rem); line-height: 1.5; }
   .portrait { grid-column: 2; grid-row: 3; align-self: end; justify-self: start; width: min(20.5vw, 27.5dvh); }
-  .profile-link { grid-column: 1; grid-row: 3; align-self: end; font-size: clamp(1rem, 1.35vw, 1.6rem); }
+  .profile-foot { grid-column: 1; grid-row: 3; align-self: end; }
+  .profile-link { font-size: clamp(1rem, 1.35vw, 1.6rem); }
 
   /* Projects: a sticky stage. Scroll pushes into the laptop, then steps through the cases. */
   .portfolio-viewport #projects { width: auto; overflow: visible; padding: 0; }
@@ -510,9 +557,9 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .contact-main .work-link { align-self: end; }
 
   .opening { inset-inline-start: var(--rail); }
-  .opening-inner { padding-inline: var(--chapter-pad); }
-  .opening-count { font-size: clamp(8rem, 19vw, 20rem); }
-  [data-opening="revealing"] .opening { transform: translateX(-100%); }
+  .opening-inner { padding: 4.2dvh var(--chapter-pad) 5dvh; }
+  .opening-mask { margin-block-start: -.09em; font-size: var(--name-size); }
+  .opening-count { font-size: 1em; letter-spacing: -.065em; }
 }
 
 @media (max-width: 680px) {
@@ -572,6 +619,7 @@ body:has(.fullscreen-menu[open]) { overflow: hidden; }
   html, .portfolio-viewport { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .opening { display: none; }
+  [data-opening] :is(.hero-name > span > span, .role, .disciplines, .hero-scroll, .hero-bottom p) { opacity: 1 !important; transform: none !important; }
 }
 
 @media (min-width: 900px) and (min-height: 600px) and (prefers-reduced-motion: reduce) {

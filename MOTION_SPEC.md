@@ -1,3 +1,16 @@
+# Loading, Home and Profile polish — 21 November 2026
+
+Batch 1 of a frame-by-frame comparison with the reference at 1440×900 (one frame every 250 ms). The user approved all 12 items.
+
+- The server renders `<html data-opening="loading">`, so the first paint is the ink loader with an ink rail and the Home copy held back; there is no flash of Home before hydration. JS moves through `counting → exiting → revealing` and removes the attribute. Reduced motion removes it at once; CSS failsafes reveal everything after 9 s if JS never runs.
+- Loader: digits rise from a mask (700 ms), then count 0→100 over 2.8 s with ease-in-out, hold 450 ms, roll up out of the mask (350 ms), and the ink wipes off bottom-to-top (650 ms, cubic-bezier(.65, 0, .35, 1)). The caption fades in at 250 ms and out on exit. The rail stays ink until the wipe, then fades to paper over 500 ms.
+- The counter sits in the same slot and size as the first name line (`--name-size`), so the digits hand over to "Nuttawat" like the reference's year strip hands over to the name.
+- Home entrance after the wipe starts: grid hairlines draw down (800 ms, +250 ms), bottom row rises (500 ms, 250 / 320 / 390 ms), "Nuttawat" (750 ms, +500 ms), "Saepan" (+700 ms), sentence (600 ms, +900 ms).
+- Home layout: name size `min(panel × .155, 25dvh)` (about 210 px at 1440×900, down from about 278 px). The hero sentence moves to the top of column 3 at about 21 px; Scroll moves to the bottom-right cell.
+- Profile enters once when 60% of the panel is in view (25% on mobile): label and intro rise (600–700 ms, intro +100 ms), the portrait reveals bottom-up with a slight scale settle (800 ms, +250 ms), then the caption and View projects link (+550 ms). The caption reuses the existing role line.
+
+---
+
 # Fullscreen navigation — 17 November 2026
 
 User selected concept 1 from the proposed navigation mockups. The user subsequently corrected the origin: on desktop the menu begins at the right boundary of the left sidebar and reveals from left to right across the remaining viewport (600 ms), keeping the rail visible. The panel uses a right-edge clip reveal so it never sweeps across the sidebar. Five masked labels rise from below with 65 ms stagger and a 170 ms initial delay. Closing retracts the panel toward the sidebar. These are implementation timings chosen for this version.

@@ -2,9 +2,11 @@
 
 import { useEffect, useRef } from "react";
 
+const ENTRANCE_DURATION = 700;
 const COUNT_DURATION = 2800;
 const HOLD_DURATION = 450;
-const HERO_DURATION = 710;
+const EXIT_DURATION = 350;
+const HERO_DURATION = 1650;
 
 export default function Opening() {
   const overlay = useRef(null);
@@ -250,6 +252,15 @@ export default function Opening() {
       delete root.dataset.opening;
     }
 
+    const profile = document.querySelector("#profile");
+    if (!motion.matches) root.dataset.motion = "";
+    const profileObserver = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      profile.toggleAttribute("data-entered", true);
+      profileObserver.disconnect();
+    }, { threshold: horizontal.matches ? 0.6 : 0.25 });
+    profileObserver.observe(profile);
+
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
@@ -273,14 +284,17 @@ export default function Opening() {
       if (event.type === "focusin" || event.key === "Escape") stopOpening();
     }
 
-    if (!motion.matches) {
+    if (motion.matches) {
+      stopOpening();
+    } else {
       intro.hidden = false;
       root.dataset.opening = "counting";
-      const started = performance.now();
+      const started = performance.now() + ENTRANCE_DURATION;
 
       function count(now) {
-        const progress = Math.min((now - started) / COUNT_DURATION, 1);
-        const value = 100 * (1 - Math.pow(1 - progress, 2));
+        const progress = Math.min(Math.max((now - started) / COUNT_DURATION, 0), 1);
+        const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+        const value = 100 * eased;
         for (const reel of number.querySelectorAll("[data-place]")) {
           const place = Number(reel.dataset.place);
           const base = Math.floor(value / place);
@@ -294,8 +308,11 @@ export default function Opening() {
           frame = requestAnimationFrame(count);
         } else {
           transition = window.setTimeout(() => {
-            root.dataset.opening = "revealing";
-            cleanup = window.setTimeout(stopOpening, HERO_DURATION);
+            root.dataset.opening = "exiting";
+            transition = window.setTimeout(() => {
+              root.dataset.opening = "revealing";
+              cleanup = window.setTimeout(stopOpening, HERO_DURATION);
+            }, EXIT_DURATION);
           }, HOLD_DURATION);
         }
       }
@@ -309,6 +326,8 @@ export default function Opening() {
     return () => {
       stopOpening();
       observer.disconnect();
+      profileObserver.disconnect();
+      delete root.dataset.motion;
       stopWheelScroll();
       viewportResize.disconnect();
       workObserver.disconnect();
@@ -330,10 +349,10 @@ export default function Opening() {
   }, []);
 
   return (
-    <div ref={overlay} className="opening" aria-hidden="true" hidden>
+    <div ref={overlay} className="opening" aria-hidden="true">
       <div className="frame opening-inner">
-
-                <div className="opening-count" ref={counter}>
+        <div className="opening-mask">
+        <div className="opening-count" ref={counter}>
           {[100, 10, 1].map((place) => (
             <span className="digit-window" data-place={place} key={place}>
               <span className="digit-reel">
@@ -344,6 +363,7 @@ export default function Opening() {
             </span>
           ))}
           <span className="opening-percent">%</span>
+        </div>
         </div>
         <span className="opening-caption">Web / Apps / Robotics</span>
       </div>

@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="th"><body>{children}</body></html>;
+  return <html lang="th" data-opening="loading" suppressHydrationWarning><body>{children}</body></html>;
 }

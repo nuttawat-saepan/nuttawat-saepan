@@ -50,7 +50,10 @@ export default function Home() {
               <figure className="portrait">
                 <Image src="/assets/nuttawat-saepan.webp" alt="Nuttawat Saepan" width={1000} height={1500} sizes="(max-width: 680px) 90vw, min(40vw, 45vh)" />
               </figure>
-              <a className="profile-link" href="#projects">View projects <span aria-hidden="true">→</span></a>
+              <div className="profile-foot">
+                <p className="portrait-caption">Software Engineer<br />Web / Apps / Robotics</p>
+                <a className="profile-link" href="#projects">View projects <span aria-hidden="true">→</span></a>
+              </div>
             </div>
           </section>
 
