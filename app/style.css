@@ -357,24 +357,26 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     letter-spacing: -.015em;
   }
 
-  /* Profile: copy column and a full-height portrait, centred as one composition in the panel */
+  /* Profile: the reference's composition as one centred block. Intro across the block,
+     then caption and link down the left half and the portrait filling the right half to the bottom. */
   .portfolio-viewport .profile-grid {
-    width: 100%;
-    max-width: 128rem;
+    width: clamp(min(100%, 34rem), calc(var(--panel) * .46), 62rem);
+    max-width: none;
     height: 100%;
     min-height: 0;
     margin-inline: auto;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 1fr auto;
-    column-gap: clamp(2.5rem, 6vw, 8rem);
-    row-gap: clamp(.75rem, 2dvh, 1.5rem);
-    padding-inline: calc(var(--panel) * .08);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 1.5rem;
+    row-gap: clamp(.75rem, 2.2dvh, 1.75rem);
+    padding-inline: 0;
     padding-block: 4.2dvh;
   }
-  .profile-grid .section-label { grid-column: 1; grid-row: 1; }
-  .profile-intro { grid-column: 1; grid-row: 2; align-self: center; max-width: 30em; font-size: clamp(1.2rem, min(2.4vw, 4.6dvh), 2.9rem); line-height: 1.5; }
-  .portrait { grid-column: 2; grid-row: 1 / -1; align-self: end; justify-self: end; width: min(34vw, calc(91.6dvh * .75)); }
-  .profile-foot { grid-column: 1; grid-row: 3; align-self: end; }
+  .profile-grid .section-label { grid-column: 1 / -1; }
+  .profile-intro { grid-column: 1 / -1; font-size: clamp(1.2rem, min(2.15vw, 4.4dvh), 2.75rem); line-height: 1.42; }
+  .portrait { grid-column: 2; grid-row: 3; align-self: end; width: 100%; max-height: 100%; min-height: 0; aspect-ratio: 3 / 4; }
+  .portrait img { height: 100%; }
+  .profile-foot { grid-column: 1; grid-row: 3; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
   .profile-link { font-size: clamp(1rem, 1.35vw, 1.6rem); }
 
   /* Projects: a sticky stage. Scroll pushes into the laptop, then steps through the cases. */
