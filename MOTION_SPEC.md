@@ -1,3 +1,11 @@
+# Menu toggle, scroll feel and Profile colour — 22 November 2026
+
+- Hamburger (option A, Cross): opening the menu morphs the three lines into an X (outer lines rotate ±45°, middle line shrinks away, 350 ms, cubic-bezier(.65, 0, .35, 1)). The same button closes the menu. The menu is now a non-modal dialog so the rail button stays clickable; the page content is made inert, Tab loops between the button and the menu, Escape closes it and focus returns to the button. The separate close button inside the menu is removed. The rail turns ink while the menu is open. On mobile the top bar is sticky and sits above the menu, which opens below it.
+- Wheel smoothing time constant rises from 105 ms to 180 ms, so each wheel step glides further and settles more softly.
+- Profile switches to ink so it reads as a different chapter from the paper Home. Section rhythm is now paper, ink, ink, paper, red.
+
+---
+
 # Loading, Home and Profile polish — 21 November 2026
 
 Batch 1 of a frame-by-frame comparison with the reference at 1440×900 (one frame every 250 ms). The user approved all 12 items.
