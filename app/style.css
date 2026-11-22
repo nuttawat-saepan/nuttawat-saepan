@@ -246,7 +246,12 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 
 @media (min-width: 900px) and (min-height: 600px) {
   :root { --rail: round(clamp(3.65rem, 9.25dvh, 7rem), 1px); --panel: calc(100vw - var(--rail)); --name-size: min(calc(var(--panel) * .155), 25dvh); --chapter-pad: clamp(2rem, 4.7vw, 6.25rem); }
-  html { overflow: hidden; }
+  /* The page scrolls vertically; --travel (set by motion.jsx) is how far, and that scroll slides the
+     pinned row sideways. The scrollbar is hidden so 100vw stays exactly the rail plus one panel. */
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+  html:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) { overflow: hidden; }
+  body::after { content: ""; display: block; height: var(--travel, 0px); }
 
   .site-header {
     position: fixed;
@@ -292,17 +297,16 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 
 
   .portfolio-viewport {
+    position: sticky;
+    top: 0;
     display: flex;
     margin-inline-start: var(--rail);
     width: var(--panel);
     height: 100dvh;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--mute) transparent;
-    scroll-behavior: smooth;
+    overflow: clip;
   }
   .portfolio-viewport > main { display: flex; flex: 0 0 auto; }
+  .portfolio-viewport > :is(main, footer) { transform: translate3d(var(--x, 0px), 0, 0); will-change: transform; }
   .portfolio-viewport :is(section, footer) {
     flex: 0 0 auto;
     width: var(--panel);
@@ -379,19 +383,19 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .profile-foot { grid-column: 1; grid-row: 3; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
   .profile-link { font-size: clamp(1rem, 1.35vw, 1.6rem); }
 
-  /* Projects: a sticky stage. Scroll pushes into the laptop, then steps through the cases. */
-  .portfolio-viewport #projects { width: auto; overflow: visible; padding: 0; }
+  /* Projects: the row holds still here while scroll pushes into the laptop (--dive-len viewports),
+     then steps through the cases (--case-len each). motion.jsx reads both lengths. */
+  .portfolio-viewport #projects { overflow: visible; padding: 0; }
   .work-track {
     --dive-len: 1;
     --case-len: .45;
     position: relative;
-    width: calc(var(--panel) * (1 + var(--dive-len) + var(--case-len) * var(--cases, 5)));
+    width: var(--panel);
     height: 100%;
   }
   .work-stage {
     --lap-w: min(calc(var(--panel) * .48), 96dvh);
-    position: sticky;
-    left: 0;
+    position: relative;
     width: var(--panel);
     height: 100%;
     overflow: hidden;
@@ -622,7 +626,7 @@ body:has(.fullscreen-menu[open]) { overflow: hidden; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html, .portfolio-viewport { scroll-behavior: auto; }
+  html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .opening { display: none; }
   [data-opening] :is(.hero-name > span > span, .role, .disciplines, .hero-scroll, .hero-bottom p) { opacity: 1 !important; transform: none !important; }

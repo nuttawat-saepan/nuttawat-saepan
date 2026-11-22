@@ -1,3 +1,17 @@
+# Desktop scroll model follows the reference — 22 November 2026
+
+Observed on the reference (1440×900): the document scrolls vertically (about 11,400 px tall). A GSAP ScrollTrigger pin holds a full-screen row of panels while that scroll moves it with translateX, one to one, and Lenis smooths the scroll. The row stops moving for one viewport of scroll during "THE WORK", where the scroll drives the zoom instead.
+
+Implemented (user decision: switch to the reference's model, without GSAP or Lenis):
+- The page scrolls vertically. `.portfolio-viewport` is sticky at the top and clips; `main` and the footer move by `translate3d(--x)`. `body::after` adds `--travel` of height, which is the row's horizontal distance plus the Projects pause. The page scrollbar is hidden so 100vw stays the rail plus one panel.
+- Scroll maps to the row one to one, except at Projects, where the row holds still for `(--dive-len + --case-len × cases)` panel widths. The laptop dive and the case steps read their progress from that held stretch, so their timing is unchanged.
+- The wheel is still eased (180 ms time constant). A sideways trackpad swipe moves the page one to one. Space, PageDown, arrow keys, scroll restoration and the Back button now work natively.
+- In-page links (Scroll, View projects, menu, Back to home, a hash in the URL on load) go to the panel's place in the row instead of the browser's anchor jump. Each push adds a history entry.
+- The page is locked while the loader counts and exits, and while the menu is open.
+- Mobile is unchanged: a plain vertical document.
+
+---
+
 # Projects opening grows from zero — 22 November 2026
 
 Following the reference's "THE WORK" opening: the laptop now starts at scale 0, so "Selected Projects" reads as one phrase. Scroll grows it from nothing, and each word stays pinned to the laptop's edge (half the laptop width plus .16em), so the laptop pushes the words apart until they reach the panel edges. The words stay solid until 70% of the dive and fade by 100%, when case mode starts. The dive is longer (1.0 viewport of travel instead of 0.7) so the growth reads slowly. The title is 6.4vw.

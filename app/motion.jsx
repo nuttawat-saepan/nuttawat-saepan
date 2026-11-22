@@ -29,12 +29,18 @@ export default function Opening() {
     const previews = [...stage.querySelectorAll(".app-preview")];
     const previewToggles = [...stage.querySelectorAll(".preview-toggle")];
     const themedPanels = [...viewport.querySelectorAll(":scope > main > [data-theme], :scope > footer[data-theme]")];
+    const panels = [...viewport.querySelectorAll(":scope > main > section, :scope > footer")];
+    const projects = track.closest("section");
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
     let videoVisible = false;
     let stageMode = "intro";
     let activeCase = -1;
     let metrics = { dive: 0, step: 1 };
+    // Desktop: the page scrolls vertically and that scroll slides a pinned row of panels sideways,
+    // as on the reference. At Projects the row holds still for `pause` px of scroll (the laptop dive,
+    // then one step per case), then carries on.
+    let layout = { pauseAt: 0, pause: 0, maxX: 0, lefts: new Map() };
 
     function measureTrack() {
       const style = getComputedStyle(track);
@@ -43,7 +49,29 @@ export default function Opening() {
         dive: (parseFloat(style.getPropertyValue("--dive-len")) || 0) * width,
         step: Math.max(1, (parseFloat(style.getPropertyValue("--case-len")) || 0) * width),
       };
+      if (!horizontal.matches) {
+        layout = { pauseAt: 0, pause: 0, maxX: 0, lefts: new Map() };
+        root.style.removeProperty("--travel");
+        viewport.style.removeProperty("--x");
+        return;
+      }
+      const lefts = new Map();
+      let left = 0;
+      for (const panel of panels) {
+        lefts.set(panel, left);
+        left += panel.offsetWidth;
+      }
+      const pause = metrics.dive + metrics.step * cases.length;
+      layout = { pauseAt: lefts.get(projects), pause, maxX: Math.max(0, left - width), lefts };
+      root.style.setProperty("--travel", `${Math.round(layout.maxX + pause)}px`);
     }
+
+    const rowOffset = (y) => clamp(y <= layout.pauseAt ? y : y <= layout.pauseAt + layout.pause ? layout.pauseAt : y - layout.pause, 0, layout.maxX);
+    const scrollTopFor = (panel) => {
+      const left = layout.lefts.get(panel) ?? 0;
+      return left <= layout.pauseAt ? left : left + layout.pause;
+    };
+    const scrollBehavior = () => (motion.matches ? "instant" : "smooth");
 
     function playCaseIn(index, first) {
       const item = cases[index];
@@ -90,14 +118,17 @@ export default function Opening() {
         return;
       }
 
-      const edge = viewport.getBoundingClientRect().left + 1;
+      const y = window.scrollY;
+      const x = Math.round(rowOffset(y));
+      viewport.style.setProperty("--x", `${-x}px`);
+
       let theme = "paper";
       for (const panel of themedPanels) {
-        if (panel.getBoundingClientRect().left <= edge) theme = panel.dataset.theme;
+        if ((layout.lefts.get(panel) ?? 0) <= x) theme = panel.dataset.theme;
       }
       sidebar.dataset.theme = theme;
 
-      const distance = edge - 1 - track.getBoundingClientRect().left;
+      const distance = y - layout.pauseAt;
       const progress = metrics.dive > 0 ? clamp(distance / metrics.dive, 0, 1) : 1;
       stage.style.setProperty("--dive", (progress * progress * (3 - 2 * progress)).toFixed(4));
 
@@ -144,12 +175,36 @@ export default function Opening() {
 
     function stepCase(event) {
       const next = activeCase + Number(event.currentTarget.dataset.step);
-      const trackStart = viewport.scrollLeft + track.getBoundingClientRect().left - viewport.getBoundingClientRect().left;
-      let target = trackStart + metrics.dive + next * metrics.step + metrics.step * 0.35;
-      if (next < 0) target = trackStart;
-      if (next >= cases.length) target = trackStart + track.offsetWidth;
+      let target = layout.pauseAt + metrics.dive + next * metrics.step + metrics.step * 0.35;
+      if (next < 0) target = layout.pauseAt;
+      if (next >= cases.length) target = scrollTopFor(panels[panels.indexOf(projects) + 1]);
       stopWheelScroll();
-      viewport.scrollTo({ left: target, behavior: motion.matches ? "instant" : "smooth" });
+      window.scrollTo({ top: target, behavior: scrollBehavior() });
+    }
+
+    // In-page links: the panels all sit at the top of the document, so the browser's own anchor jump
+    // would go nowhere. Translate the panel's place in the row into a scroll position instead.
+    function scrollToHash(hash, behavior) {
+      if (!horizontal.matches || !hash || hash === "#") return false;
+      let target;
+      try { target = document.querySelector(hash); } catch { return false; }
+      const panel = target && panels.find((item) => item.contains(target));
+      if (!panel) return false;
+      stopWheelScroll();
+      window.scrollTo({ top: scrollTopFor(panel), behavior });
+      return true;
+    }
+
+    function onAnchorClick(event) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest?.('a[href^="#"]');
+      if (!link || !scrollToHash(link.hash, scrollBehavior())) return;
+      event.preventDefault();
+      if (link.hash !== window.location.hash) history.pushState(null, "", link.hash);
+    }
+
+    function onPopState() {
+      scrollToHash(window.location.hash, scrollBehavior());
     }
 
     function onResize() {
@@ -159,11 +214,14 @@ export default function Opening() {
 
     const viewportResize = new ResizeObserver(onResize);
     viewportResize.observe(viewport);
-    viewport.addEventListener("scroll", updateScrollEffects, { passive: true });
+    window.addEventListener("scroll", updateScrollEffects, { passive: true });
+    document.addEventListener("click", onAnchorClick);
+    window.addEventListener("popstate", onPopState);
     caseButtons.forEach((button) => button.addEventListener("click", stepCase));
     stage.addEventListener("click", onConceptClick);
     measureTrack();
     updateScrollEffects();
+    scrollToHash(window.location.hash, "instant");
 
     function updateVideo() {
       if (videoVisible && !motion.matches && stageMode !== "case") {
@@ -189,53 +247,63 @@ export default function Opening() {
       previousFrameTime = 0;
     }
 
+    const maxScrollTop = () => document.documentElement.scrollHeight - window.innerHeight;
+
     function animateWheelScroll(now) {
-      const position = viewport.scrollLeft;
-      scrollTarget = Math.min(scrollTarget, viewport.scrollWidth - viewport.clientWidth);
+      const position = window.scrollY;
+      scrollTarget = Math.min(scrollTarget, maxScrollTop());
       const distance = scrollTarget - position;
       const elapsed = previousFrameTime ? now - previousFrameTime : 16;
       previousFrameTime = now;
 
       if (Math.abs(distance) < 1) {
-        viewport.scrollTo({ left: scrollTarget, behavior: "instant" });
+        window.scrollTo({ top: scrollTarget, behavior: "instant" });
         stopWheelScroll();
         return;
       }
 
       const step = distance * (1 - Math.exp(-elapsed / 180));
-      viewport.scrollTo({ left: position + Math.sign(step) * Math.max(1, Math.abs(step)), behavior: "instant" });
+      window.scrollTo({ top: position + Math.sign(step) * Math.max(1, Math.abs(step)), behavior: "instant" });
       scrollFrame = requestAnimationFrame(animateWheelScroll);
     }
 
+    // Wheel input is eased towards its target (180 ms time constant). A sideways trackpad swipe moves
+    // the page one to one, since the row runs sideways anyway. Panels that scroll inside themselves
+    // (concept copy, the example app's feed) get the wheel first.
     function onWheel(event) {
-      if (!horizontal.matches || event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) {
+      const opening = root.dataset.opening && root.dataset.opening !== "revealing";
+      if (!horizontal.matches || event.ctrlKey || opening || event.target.closest?.(".fullscreen-menu")) {
         stopWheelScroll();
         return;
       }
 
-      const panel = event.target.closest(".case-copy, .app-feed, section, footer");
-      if (panel && panel.id !== "home") {
-        const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
-        if (event.deltaY > 0 ? remaining > 1 : panel.scrollTop > 1) {
-          stopWheelScroll();
-          return;
+      const sideways = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+      const delta = sideways ? event.deltaX : event.deltaY;
+      if (!sideways) {
+        const panel = event.target.closest(".case-copy, .app-feed, section, footer");
+        if (panel && panel.id !== "home") {
+          const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
+          if (delta > 0 ? remaining > 1 : panel.scrollTop > 1) {
+            stopWheelScroll();
+            return;
+          }
         }
       }
 
       event.preventDefault();
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientWidth : 1;
-      const base = scrollFrame ? scrollTarget : viewport.scrollLeft;
-      const maxScroll = viewport.scrollWidth - viewport.clientWidth;
-      scrollTarget = Math.max(0, Math.min(base + event.deltaY * unit, maxScroll));
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
+      const base = scrollFrame ? scrollTarget : window.scrollY;
+      scrollTarget = clamp(base + delta * unit, 0, maxScrollTop());
 
-      if (motion.matches) {
-        viewport.scrollTo({ left: scrollTarget, behavior: "instant" });
+      if (motion.matches || sideways) {
+        stopWheelScroll();
+        window.scrollTo({ top: scrollTarget, behavior: "instant" });
       } else if (!scrollFrame) {
         scrollFrame = requestAnimationFrame(animateWheelScroll);
       }
     }
 
-    viewport.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("wheel", onWheel, { passive: false });
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
@@ -332,11 +400,15 @@ export default function Opening() {
       workObserver.disconnect();
       workVideo.pause();
       stage.style.removeProperty("--dive");
-      viewport.removeEventListener("scroll", updateScrollEffects);
+      viewport.style.removeProperty("--x");
+      root.style.removeProperty("--travel");
+      window.removeEventListener("scroll", updateScrollEffects);
+      document.removeEventListener("click", onAnchorClick);
+      window.removeEventListener("popstate", onPopState);
       caseButtons.forEach((button) => button.removeEventListener("click", stepCase));
       stage.removeEventListener("click", onConceptClick);
       sidebar.dataset.theme = "paper";
-      viewport.removeEventListener("wheel", onWheel);
+      window.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
       document.removeEventListener("keydown", stopWheelScroll);
       horizontal.removeEventListener("change", stopWheelScroll);
