@@ -379,7 +379,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   /* Projects: a sticky stage. Scroll pushes into the laptop, then steps through the cases. */
   .portfolio-viewport #projects { width: auto; overflow: visible; padding: 0; }
   .work-track {
-    --dive-len: .7;
+    --dive-len: 1;
     --case-len: .45;
     position: relative;
     width: calc(var(--panel) * (1 + var(--dive-len) + var(--case-len) * var(--cases, 5)));
@@ -395,19 +395,21 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     padding: 0;
   }
   .work-label { position: absolute; left: var(--chapter-pad); top: 4.2dvh; margin: 0; }
+  /* The laptop grows from nothing between the words and pushes them apart, like the reference's
+     "THE WORK" grid. Each word is pinned to the laptop's edge; both fade only near the end of the dive. */
   .work-title {
+    --half: calc(var(--lap-w) * 1.16 * var(--dive, 0) / 2);
+    --dx: calc(var(--panel) * .08 * var(--dive, 0));
     position: absolute;
     inset: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: calc(var(--panel) * .14);
-    align-items: center;
-    font-size: clamp(2.6rem, 6vw, 8rem);
-    opacity: calc(1 - var(--dive, 0) * 1.7);
+    display: block;
+    font-size: clamp(2.6rem, 6.4vw, 8.5rem);
+    opacity: clamp(0, calc((1 - var(--dive, 0)) * 3.3), 1);
     pointer-events: none;
   }
-  .work-title span:first-child { text-align: right; transform: translateX(calc(var(--panel) * -.3 * var(--dive, 0))); }
-  .work-title span:last-child { transform: translateX(calc(var(--panel) * .3 * var(--dive, 0))); }
+  .work-title span { position: absolute; top: 50%; line-height: 1; white-space: nowrap; }
+  .work-title span:first-child { right: 50%; transform: translate(calc(var(--dx) - var(--half) - .16em), -50%); }
+  .work-title span:last-child { left: 50%; transform: translate(calc(var(--dx) + var(--half) + .16em), -50%); }
 
   .laptop {
     position: absolute;
@@ -419,7 +421,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     transform:
       translate(-50%, -50%)
       translate(calc(var(--panel) * .08 * var(--dive, 0)), calc(3dvh * var(--dive, 0)))
-      scale(calc(.2 + .8 * var(--dive, 0)));
+      scale(var(--dive, 0));
     will-change: transform;
   }
   .laptop-lid { border-width: 3px; border-radius: 18px 18px 6px 6px; }

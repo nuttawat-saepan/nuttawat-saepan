@@ -1,3 +1,9 @@
+# Projects opening grows from zero — 22 November 2026
+
+Following the reference's "THE WORK" opening: the laptop now starts at scale 0, so "Selected Projects" reads as one phrase. Scroll grows it from nothing, and each word stays pinned to the laptop's edge (half the laptop width plus .16em), so the laptop pushes the words apart until they reach the panel edges. The words stay solid until 70% of the dive and fade by 100%, when case mode starts. The dive is longer (1.0 viewport of travel instead of 0.7) so the growth reads slowly. The title is 6.4vw.
+
+---
+
 # Menu toggle, scroll feel and Profile colour — 22 November 2026
 
 - Hamburger (option A, Cross): opening the menu morphs the three lines into an X (outer lines rotate ±45°, middle line shrinks away, 350 ms, cubic-bezier(.65, 0, .35, 1)). The same button closes the menu. The menu is now a non-modal dialog so the rail button stays clickable; the page content is made inert, Tab loops between the button and the menu, Escape closes it and focus returns to the button. The separate close button inside the menu is removed. The rail turns ink while the menu is open. On mobile the top bar is sticky and sits above the menu, which opens below it.
