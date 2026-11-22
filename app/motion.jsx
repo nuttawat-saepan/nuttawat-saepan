@@ -221,7 +221,6 @@ export default function Opening() {
     stage.addEventListener("click", onConceptClick);
     measureTrack();
     updateScrollEffects();
-    scrollToHash(window.location.hash, "instant");
 
     function updateVideo() {
       if (videoVisible && !motion.matches && stageMode !== "case") {
@@ -304,6 +303,9 @@ export default function Opening() {
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
+    // A hash in the URL on load (e.g. /#techstack): go to that panel. This must run after the wheel
+    // state above exists, since scrollToHash stops any wheel glide first.
+    scrollToHash(window.location.hash, "instant");
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
