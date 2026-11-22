@@ -43,7 +43,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="profile" id="profile" data-theme="paper" aria-labelledby="profile-title">
+          <section className="profile" id="profile" data-theme="ink" aria-labelledby="profile-title">
             <div className="frame profile-grid">
               <h2 id="profile-title" className="section-label"><span aria-hidden="true">(01)</span> Quick intro</h2>
               <p className="profile-intro">ผม Nuttawat Saepan พัฒนาซอฟต์แวร์ตั้งแต่เว็บและแอป ไปจนถึงระบบหุ่นยนต์ มีประสบการณ์กับ Live Commerce, Video Playback, เครื่องมือจัดการคอนเทนต์ และ Systems Integration</p>
