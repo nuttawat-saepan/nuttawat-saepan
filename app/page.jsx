@@ -159,6 +159,7 @@ export default function Home() {
                               <h4>{concept.title}</h4>
                               <p>{concept.text}</p>
                               {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}
+                              {concept.measured && <p className="concept-learn"><span>Measured</span>{concept.measured}</p>}
                             </div>
                           ))}
                         </div>

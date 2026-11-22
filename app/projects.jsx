@@ -2,6 +2,7 @@ import ConceptSlides from "./slides";
 
 // Portfolio copy distilled from PROJECT_CONCEPTS.md. Keep it to work the user verified as their own:
 // no commit hashes, file paths, teammate work, client data, or numbers that were never measured.
+// "measured" holds a number the user actually measured, with the setup it was measured in.
 // "tag" is the skill area shown beside each concept. "demo" names the screen state a concept shows
 // (and, for oneD, its slide in slides.jsx); add "at" (seconds) once a project has a real video.
 
@@ -34,7 +35,7 @@ export const projects = [
     concepts: [
       { title: "Swipe-to-play feed", tag: "PERF", demo: "feed", text: "เตรียม player ของคลิปถัดไปโดยไม่เล่นเพื่อ buffer ช่วงต้นไว้ และเริ่มหลังคลิปปัจจุบันขึ้นเฟรมแรกแล้วเท่านั้นจึงไม่แย่ง bandwidth ปัดแล้วเล่นทันที" },
       { title: "Player cache", tag: "PERF", demo: "cache", text: "debounce การ preload 400 ms และเก็บ native player ไม่เกิน 3 ตัว ตัวที่ไกลจากคลิปปัจจุบันที่สุดถูก dispose ก่อน" },
-      { title: "Oversell-proof checkout", tag: "BACKEND", demo: "checkout", text: "checkout ทั้งหมดอยู่ใน transaction เดียว ใช้ idempotency key ล็อกแถวสต็อก จองสต็อกแบบมีเวลาหมดอายุ และตอบ 409 เมื่อราคาเปลี่ยน" },
+      { title: "Oversell-proof checkout", tag: "BACKEND", demo: "checkout", text: "checkout ทั้งหมดอยู่ใน transaction เดียว ใช้ idempotency key ล็อกแถวสต็อก จองสต็อกแบบมีเวลาหมดอายุ และตอบ 409 เมื่อราคาเปลี่ยน", measured: "50 คนกดพร้อมกัน สต็อก 10 (integration test): ไม่ lock ขายเกิน 37–40 · ระบบนี้ขาย 10 พอดี · กดซ้ำ 10 ครั้งได้ 1 ออร์เดอร์" },
       { title: "Video pipeline", tag: "BACKEND", demo: "pipeline", text: "อัปโหลดตรงจากแอปไปผู้ให้บริการวิดีโอ ตรวจลายเซ็นของ callback มีงาน reconciliation ทุกนาที และคิว thumbnail ที่ลองใหม่ตามตาราง" },
       { title: "Live streaming", tag: "REALTIME", demo: "live", text: "ถ่ายทอดผ่าน RTMP เล่นผ่าน HLS ส่ง heartbeat ทุก 25 วินาที reconnect โดยไม่สร้างห้องใหม่ และมีโควตาไลฟ์รายวัน" },
       { title: "Marketplace sync", tag: "API", demo: "market", text: "sync สินค้าและสต็อกกับ TikTok Shop, Lazada, Shopee และ LINE MyShop พร้อมจำกัดอัตราเรียก API และลองใหม่ตาม Retry-After" },
