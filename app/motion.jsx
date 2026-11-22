@@ -202,7 +202,7 @@ export default function Opening() {
         return;
       }
 
-      const step = distance * (1 - Math.exp(-elapsed / 105));
+      const step = distance * (1 - Math.exp(-elapsed / 180));
       viewport.scrollTo({ left: position + Math.sign(step) * Math.max(1, Math.abs(step)), behavior: "instant" });
       scrollFrame = requestAnimationFrame(animateWheelScroll);
     }
