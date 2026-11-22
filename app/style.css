@@ -489,10 +489,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     transform: translateX(-50%);
   }
 
-  /* Screen sketches: ThaiThai's phone follows the selected concept */
-  .mock { position: absolute; inset: 0; container-type: inline-size; font-family: var(--sans); color: var(--paper); }
-
-  /* oneD slides: node graphs drawn on a fixed 1200 × 750 stage, scaled to the screen by motion.jsx
+  /* Slides: node graphs drawn on a fixed 1200 × 750 stage, scaled to the screen by motion.jsx
      (--stage-scale). The selected concept sets --slide and the track glides to it. */
   .sl-stage { position: absolute; left: 0; top: 0; width: 1200px; height: 750px; overflow: hidden; transform: scale(var(--stage-scale, .5)); transform-origin: 0 0; background: repeating-linear-gradient(90deg, #2b2420 0 7px, #151412 7px 15px); font-family: var(--sans); color: var(--paper); }
   .sl-track { display: flex; flex-direction: column; gap: 28px; transform: translateY(calc(var(--slide, 0) * -778px)); transition: transform 1s cubic-bezier(.72, 0, .18, 1); }
@@ -533,6 +530,11 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .sl-list { align-self: stretch; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; text-align: start; color: #cfccc4; }
   .sl-list li::before { content: "— "; color: var(--red); }
   .sl-spin { width: 34px; height: 34px; border: 3px solid #3c3b37; border-top-color: var(--red); border-radius: 50%; animation: sl-spin 1s linear infinite; }
+  .sl-frames { width: 100%; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .sl-frames span { aspect-ratio: 9 / 14; border-radius: 4px; background: #3a3934; }
+  .sl-frames .is-on { outline: 3px solid var(--red); outline-offset: -3px; }
+  .sl-lanes { gap: 22px; transform: rotate(-12deg); }
+  .sl-lanes span { height: 10px; border-radius: 0; background: none; border-block-start: 3px dashed var(--red); }
   .sl-pill { padding: 12px 22px; border-radius: 99px; background: #0c0c0b; font: 600 22px/1 var(--sans); color: var(--paper); }
   .sl-icon { width: 54px; height: 54px; fill: none; stroke: var(--paper); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .sl-icon-heart { fill: var(--red); stroke: var(--red); }
@@ -561,24 +563,6 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .screen-modes-pill { position: absolute; top: 3px; bottom: 3px; left: 3px; border-radius: 2rem; background: var(--red); transition: transform .45s var(--ease), width .45s var(--ease); }
   .play-glyph { width: 0; height: 0; border-block: .3rem solid transparent; border-inline-start: .48rem solid currentColor; }
 
-  .t-phone { position: absolute; left: 50%; top: 11cqw; width: 26cqw; height: 50cqw; padding: 3cqw 2cqw; border: .6cqw solid #3a3a38; border-radius: 3.4cqw; background: #2c2c2a; transform: translateX(-50%); font-size: 2cqw; }
-  .t-live { display: inline-block; padding: .4cqw 1cqw; background: rgb(241 240 235 / .15); font-weight: 600; text-transform: uppercase; transition: background-color .3s, color .3s; }
-  .t-panel { position: absolute; inset: 9cqw 2cqw auto; display: grid; gap: 1.2cqw; margin: 0; padding: 0; list-style: none; opacity: 0; transform: translateY(1.5cqw); transition: opacity .3s, transform .4s var(--ease); }
-  .t-panel p, .t-panel li { display: flex; align-items: center; gap: 1cqw; padding: 1.1cqw 1.2cqw; background: rgb(241 240 235 / .1); }
-  .t-feed p { height: 14cqw; align-items: end; }
-  .t-feed p:last-child, .t-cache p:last-child { outline: 1.5px solid var(--red); outline-offset: -1.5px; }
-  .t-cache p:last-child { color: var(--red); text-decoration: line-through; }
-  .t-steps { counter-reset: step; }
-  .t-steps li::before { counter-increment: step; content: counter(step); width: 3cqw; height: 3cqw; display: grid; place-items: center; border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 1.7cqw; font-weight: 600; }
-  .t-steps li:last-child { background: var(--red); color: var(--ink); }
-  .t-stream i { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: var(--red); }
-  .t-market p:nth-child(odd) { background: rgb(241 240 235 / .18); }
-  .t-editor div { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8cqw; }
-  .t-editor i { aspect-ratio: 9 / 12; background: #4a4a46; }
-  .t-editor i:nth-child(2) { outline: 2px solid var(--red); }
-  .t-editor p { justify-content: center; color: var(--red); background: none; }
-  :is([data-demo="feed"] .t-feed, [data-demo="cache"] .t-cache, [data-demo="checkout"] .t-checkout, [data-demo="pipeline"] .t-pipeline, [data-demo="live"] .t-stream, [data-demo="market"] .t-market, [data-demo="editor"] .t-editor) { opacity: 1; transform: none; }
-  [data-demo="live"] .t-live { background: var(--red); color: var(--ink); }
   [data-mode="case"] .screen-intro { opacity: 0; }
   [data-mode="case"] .screen-case[data-active] { opacity: 1; }
 
