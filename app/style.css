@@ -195,8 +195,8 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .opening-inner { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: calc(4.5rem + 2rem) 5dvh; }
 .opening-mask { overflow: clip; padding-block: .02em .1em; }
 .opening-count { display: flex; align-items: center; font: 600 clamp(3.4rem, 17vw, 8rem)/1 var(--sans); letter-spacing: -.065em; }
-.digit-window { display: block; width: .56em; height: 1em; overflow: hidden; transition: width 180ms var(--ease), opacity 180ms; }
-.digit-window[data-place="100"], .digit-window[data-place="10"] { width: 0; opacity: 0; }
+.digit-window { display: block; width: .6em; height: 1em; overflow-x: visible; overflow-y: clip; font-variant-numeric: tabular-nums; transition: opacity 180ms; }
+.digit-window[data-place="100"], .digit-window[data-place="10"] { opacity: 0; }
 .digit-reel { display: block; will-change: transform; }
 .digit { display: block; height: 1em; line-height: 1; text-align: center; }
 .opening-percent { margin-inline-start: .05em; font-size: .65em; color: var(--red); }

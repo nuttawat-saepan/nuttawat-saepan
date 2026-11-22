@@ -301,7 +301,6 @@ export default function Opening() {
           const carry = Math.max(0, (value % place - (place - 1)));
           const position = place === 1 ? value : base + carry;
           reel.firstElementChild.style.transform = `translateY(-${position}em)`;
-          reel.style.width = place === 1 || value >= place - 1 ? ".56em" : "0";
           reel.style.opacity = place === 1 || value >= place - 1 ? "1" : "0";
         }
         if (progress < 1) {
