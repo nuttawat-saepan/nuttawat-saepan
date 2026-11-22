@@ -1,3 +1,17 @@
+# What I do replaces Techstack — 22 November 2026
+
+User decision: What I do replaces Techstack and sits between Profile and Projects. The story reads who → what I can do → proof → contact. Section labels are now (01) Quick intro, (02) What I do, (03) Selected projects, (04) Contact. The menu lists Home, Profile, What I do, Projects, Contact. Theme rhythm: paper, ink, paper, ink, red.
+
+- Layout follows the reference's "Chapter III · What I do".
+  - Desktop: one wide chapter in the row. A half-panel intro holds the label, "What I do." large in the middle, and a kicker plus lead sentence at the bottom. Then come three columns (each 0.29 panel, at least 21rem): 01 Web, 02 Apps, 03 Robotics.
+  - Each column has a big number at the top, the area name in the middle, and at the bottom a one-line description, "Used" tool chips and "Seen in" links. The bottom block has the same height in every column, so the three names line up. Hovering a column turns its number red.
+  - Mobile: the intro and then the columns stack.
+- Tools come only from the stacks of the projects listed under each area. Nothing is rated. The descriptions are drafts for the user to confirm.
+- "Seen in" links go to the case itself. On desktop they scroll into that case's step of the Projects hold, so the case is already open. On mobile they jump to the case, below the sticky top bar.
+- No entrance animation yet.
+
+---
+
 # Chapter 04 cases: labelled concepts, slides and screen tabs — 22 November 2026
 
 User decision: merge this session's prototype with the "Shorts Laptop Preview" from another chat. Keep that file's slide visuals, screen tabs and app-to-concept link, but write all content from PROJECT_CONCEPTS.md. Several of that file's details (prefetch at 2 clips, ad as 5th slot, impression after 1 s, `useFeed()`, ~180 ms) are not in the source and were not used.

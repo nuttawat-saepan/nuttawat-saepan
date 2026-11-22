@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const sections = [
   ["Home", "#home"],
   ["Profile", "#profile"],
+  ["What I do", "#what-i-do"],
   ["Projects", "#projects"],
-  ["Techstack", "#techstack"],
   ["Contact", "#contact"],
 ];
 

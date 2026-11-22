@@ -1,18 +1,8 @@
 import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
-import { ProjectScreen, projects } from "./projects";
+import { ProjectScreen, areas, caseId, projects } from "./projects";
 import OneDPreview from "./preview";
-
-const stack = [
-  ["Flutter", "ThaiThai · หน้าฝั่งผู้ขาย"],
-  ["Pinia", "oneD · การจำแท็บใน CMS"],
-  ["ROS 2", "ระบบหุ่นยนต์"],
-  ["Nav2", "Unitree Go2 · การวางเส้นทาง"],
-  ["FAST-LIO", "Unitree Go2 · การทำแผนที่และประมาณการเคลื่อนที่"],
-  ["MQTT", "Unitree Go2 · รับภารกิจและรายงานความคืบหน้า"],
-  ["Livox Mid-360", "Unitree Go2 · อุปกรณ์ LiDAR"],
-];
 
 const pad = (value) => String(value).padStart(2, "0");
 const total = pad(projects.length);
@@ -57,10 +47,44 @@ export default function Home() {
             </div>
           </section>
 
+          <section className="what" id="what-i-do" data-theme="paper" aria-labelledby="what-title">
+            <div className="what-intro">
+              <p className="section-label" aria-hidden="true"><span>(02)</span> What I do</p>
+              <h2 id="what-title" className="what-title">What I do<i className="dot" aria-hidden="true">.</i></h2>
+              <div className="what-lead">
+                <p className="what-kicker">Web / Apps / Robotics</p>
+                <p lang="en">I build for the web, mobile apps and robots. Each column lists only the tools these projects actually used.</p>
+              </div>
+            </div>
+            <ol className="what-list">
+              {areas.map((area, index) => (
+                <li key={area.name} className="what-col">
+                  <p className="what-num" aria-hidden="true">{pad(index + 1)}</p>
+                  <h3 className="what-name">{area.name}</h3>
+                  <div className="what-bottom">
+                    <p className="what-desc">{area.text}</p>
+                    <div>
+                      <h4 className="what-sub">Used</h4>
+                      <ul className="what-tools">{area.tools.map((tool) => <li key={tool}>{tool}</li>)}</ul>
+                    </div>
+                    <div>
+                      <h4 className="what-sub">Seen in</h4>
+                      <p className="what-seen">
+                        {area.projects.map((project) => (
+                          <a key={project.name} href={`#${caseId(project.name)}`}>{project.name} <span aria-hidden="true">→</span></a>
+                        ))}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
           <section className="projects" id="projects" data-theme="ink" aria-labelledby="projects-title">
             <div className="work-track" style={{ "--cases": projects.length }}>
               <div className="work-stage" data-mode="intro">
-                <p className="section-label work-label" aria-hidden="true">(02) Selected projects — {total}</p>
+                <p className="section-label work-label" aria-hidden="true">(03) Selected projects — {total}</p>
                 <h2 className="work-title" id="projects-title" aria-label="Selected projects">
                   <span>Selected</span><span>Projects</span>
                 </h2>
@@ -95,7 +119,7 @@ export default function Home() {
 
                 <ol className="case-list">
                   {projects.map((project, index) => (
-                    <li key={project.name} className="case" data-case={index} data-preview={project.preview ? index : undefined}>
+                    <li key={project.name} id={caseId(project.name)} className="case" data-case={index} data-preview={project.preview ? index : undefined}>
                       <article className="ticket">
                         <span className="punch" aria-hidden="true" />
                         <h3 className={project.name.length > 16 ? "is-long" : undefined}>{project.name}</h3>
@@ -153,18 +177,6 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </div>
-          </section>
-
-          <section className="techstack" id="techstack" data-theme="paper" aria-labelledby="stack-title">
-            <div className="frame stack-grid">
-              <div>
-                <p className="section-label" aria-hidden="true">(03) Tools</p>
-                <h2 id="stack-title">Techstack<i className="dot" aria-hidden="true">.</i></h2>
-              </div>
-              <dl className="stack-list">
-                {stack.map(([name, usage]) => <div key={name}><dt>{name}</dt><dd>{usage}</dd></div>)}
-              </dl>
             </div>
           </section>
         </main>

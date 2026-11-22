@@ -245,8 +245,11 @@ export default function Opening() {
       try { target = document.querySelector(hash); } catch { return false; }
       const panel = target && panels.find((item) => item.contains(target));
       if (!panel) return false;
+      // A case (e.g. "Seen in" links from What I do): land inside that case's step of the hold.
+      const caseIndex = cases.indexOf(target.closest(".case"));
+      const top = caseIndex >= 0 ? layout.pauseAt + metrics.dive + metrics.step * (caseIndex + 0.35) : scrollTopFor(panel);
       stopWheelScroll();
-      window.scrollTo({ top: scrollTopFor(panel), behavior });
+      window.scrollTo({ top, behavior });
       return true;
     }
 

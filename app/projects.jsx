@@ -121,3 +121,19 @@ export function ProjectScreen({ project, index }) {
     </>
   );
 }
+
+// Chapter "What I do": three areas matching "Web / Apps / Robotics". Tools are taken from the
+// stacks of the projects listed under each area, so nothing appears that a project didn't use.
+// The one-line descriptions are drafts for the user to confirm.
+const areaList = [
+  { name: "Web", text: "เว็บแอปที่ทำงานกับวิดีโอและ workflow ข้อมูล ตั้งแต่ฟีด Shorts ไปจนถึงระบบจัดการลานถัง", projects: ["oneD", "LCS"] },
+  { name: "Apps", text: "แอปมือถือสำหรับ live commerce ทั้งฟีดวิดีโอ ตัวตัดต่อ ไลฟ์สตรีม และ backend ที่อยู่เบื้องหลัง", projects: ["ThaiThai"] },
+  { name: "Robotics", text: "ระบบนำทางและควบคุมหุ่นยนต์ ทั้งใน simulator และบนตัวเครื่อง", projects: ["Unitree Go2", "Beachboy"] },
+];
+
+export const caseId = (name) => `case-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
+export const areas = areaList.map((area) => {
+  const used = area.projects.map((name) => projects.find((project) => project.name === name));
+  return { ...area, projects: used, tools: [...new Set(used.flatMap((project) => project.stack.split(" · ")))] };
+});

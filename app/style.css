@@ -77,7 +77,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .screen-modes { display: none; }
 
 .case-list { list-style: none; padding: 0; margin-block-start: 2.5rem; display: grid; gap: 2.5rem; }
-.case { display: grid; gap: 1.25rem; }
+.case { display: grid; gap: 1.25rem; scroll-margin-top: calc(4.5rem + 1px); }
 .ticket { position: relative; background: var(--card); color: var(--ink); padding: 1.5rem 1.5rem 1rem 2.25rem; }
 .ticket::before, .ticket::after, .punch::before, .punch::after { content: ""; position: absolute; width: .8rem; height: .8rem; border-radius: 50%; background: var(--ink); }
 .ticket::before { top: .7rem; left: .7rem; }
@@ -182,14 +182,27 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .case-count { margin-block-start: 1rem; font: 600 .75rem/1 var(--sans); letter-spacing: .14em; color: var(--red); }
 .case-nav { display: none; }
 
-/* Techstack */
-.techstack { padding-block: 3.5rem; }
-.stack-grid { display: grid; gap: 2rem; }
-.stack-grid h2 { margin-block-start: .75rem; font: 600 clamp(3rem, 12vw, 6rem)/.9 var(--sans); letter-spacing: -.06em; }
-.stack-list { border-block-end: 1px solid var(--rule); }
-.stack-list > div { display: grid; grid-template-columns: minmax(7rem, .8fr) 1.2fr; gap: 1rem; align-items: baseline; padding-block: .8rem; border-block-start: 1px solid var(--rule); }
-.stack-list dt { font: 500 1.35rem/1.1 var(--sans); letter-spacing: -.03em; }
-.stack-list dd { font: 400 .86rem/1.5 var(--thai); color: var(--sub); }
+/* What I do: an intro, then one column per area (Web / Apps / Robotics). Stacked on small screens. */
+.what { padding-block: 3.5rem; }
+.what-intro { display: grid; gap: 1.2rem; padding-inline: var(--gutter); }
+.what-title { margin-block-start: .75rem; font: 600 clamp(3rem, 12vw, 6rem)/.9 var(--sans); letter-spacing: -.06em; }
+.what-kicker { margin-block-end: .9rem; font: 600 .75rem/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--sub); }
+.what-lead p:last-child { max-width: 22em; font: 400 clamp(1.25rem, 5vw, 1.6rem)/1.25 var(--sans); letter-spacing: -.025em; }
+.what-list { list-style: none; margin: 2.5rem 0 0; padding: 0 var(--gutter); }
+.what-col { display: grid; gap: 1rem; padding-block: 1.8rem; border-block-start: 1px solid var(--rule); }
+.what-num { font: 600 clamp(3.5rem, 16vw, 5rem)/.8 var(--sans); letter-spacing: -.06em; transition: color .3s; }
+.what-name { font: 600 clamp(2rem, 9vw, 2.8rem)/.95 var(--sans); letter-spacing: -.045em; }
+.what-bottom { display: flex; flex-direction: column; gap: 1.4rem; }
+.what-desc { font: 400 .98rem/1.6 var(--thai); }
+.what-sub { margin-block-end: .6rem; font: 600 .7rem/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+.what-tools { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.what-tools li { padding: .32rem .62rem; border: 1px solid var(--rule); border-radius: 2rem; font: 500 .8rem/1 var(--sans); }
+.what-seen { display: flex; flex-wrap: wrap; gap: .4rem 1.3rem; }
+.what-seen a { padding-block-end: .15rem; border-block-end: 1px solid currentColor; font: 500 1.05rem/1.3 var(--sans); }
+.what-seen a span { display: inline-block; transition: transform .25s var(--ease); }
+.what-seen a:hover { color: var(--red); }
+.what-seen a:hover span { transform: translateX(.2em); }
+.what-col:hover .what-num { color: var(--red); }
 
 /* Contact */
 .contact { padding-block: 3.5rem 1rem; }
@@ -608,10 +621,20 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .is-next .case-circle { background: var(--paper); border-color: var(--paper); color: var(--ink); }
   .is-next:hover .case-circle { background: var(--red); border-color: var(--red); }
 
-  /* Techstack and Contact */
-  .techstack { padding: 0; }
-  .stack-grid { height: 100%; grid-template-columns: .85fr 1fr; gap: clamp(2rem, 7vw, 8rem); align-items: center; padding-block: 4.2dvh; }
-  .stack-grid h2 { font-size: clamp(3rem, 7vw, 8rem); }
+  /* What I do: one wide chapter in the row. A half-panel intro, then three columns of .29 panel */
+  .portfolio-viewport #what-i-do { width: auto; display: flex; padding: 0; overflow: clip; }
+  .what-intro { width: calc(var(--panel) * .5); height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 4.2dvh var(--chapter-pad) 5dvh; border-inline-end: 1px solid var(--rule); }
+  .what-title { margin: 0; font-size: clamp(3rem, 7vw, 8rem); }
+  .what-lead p:last-child { font-size: clamp(1.35rem, 2.2vw, 2.5rem); }
+  .what-list { display: flex; height: 100%; margin: 0; padding: 0; }
+  .what-col { width: calc(var(--panel) * .29); min-width: 21rem; height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; gap: 1.5rem; padding: 4.2dvh clamp(1.5rem, 2.8vw, 3.5rem) 5dvh; border-block-start: 0; border-inline-end: 1px solid var(--rule); }
+  .what-num { font-size: clamp(5rem, 12dvh, 10rem); }
+  .what-name { align-self: center; font-size: clamp(2.2rem, 3.6vw, 4.2rem); }
+  /* the same height in every column, so the three titles line up */
+  .what-bottom { min-height: min(17rem, 38dvh); justify-content: flex-start; }
+  .what-desc { font-size: clamp(.92rem, 1.05vw, 1.1rem); }
+
+  /* Contact */
   .contact { padding: 0; }
   .contact > .frame { min-height: 100%; display: flex; flex-direction: column; padding-block: 4.2dvh 1rem; }
   .contact-main { flex: 1; flex-direction: row; justify-content: space-between; align-items: stretch; padding-block: 2dvh 3rem; }
