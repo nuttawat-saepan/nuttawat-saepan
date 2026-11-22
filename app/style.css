@@ -357,22 +357,23 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     letter-spacing: -.015em;
   }
 
-  /* Profile: indented copy column, portrait anchored bottom, one viewport tall */
+  /* Profile: copy column and a full-height portrait, centred as one composition in the panel */
   .portfolio-viewport .profile-grid {
     width: 100%;
-    max-width: none;
+    max-width: 128rem;
     height: 100%;
     min-height: 0;
-    align-content: start;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-    grid-template-rows: auto auto 1fr;
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: clamp(2.5rem, 6vw, 8rem);
     row-gap: clamp(.75rem, 2dvh, 1.5rem);
-    padding-inline: calc(var(--panel) * .24) var(--chapter-pad);
+    padding-inline: calc(var(--panel) * .08);
     padding-block: 4.2dvh;
   }
-  .profile-grid .section-label, .profile-intro { grid-column: 1 / -1; }
-  .profile-intro { max-width: min(52vw, 46rem); font-size: clamp(1.2rem, min(2.55vw, 4.3dvh), 2.5rem); line-height: 1.5; }
-  .portrait { grid-column: 2; grid-row: 3; align-self: end; justify-self: start; width: min(20.5vw, 27.5dvh); }
+  .profile-grid .section-label { grid-column: 1; grid-row: 1; }
+  .profile-intro { grid-column: 1; grid-row: 2; align-self: center; max-width: 30em; font-size: clamp(1.2rem, min(2.4vw, 4.6dvh), 2.9rem); line-height: 1.5; }
+  .portrait { grid-column: 2; grid-row: 1 / -1; align-self: end; justify-self: end; width: min(34vw, calc(91.6dvh * .75)); }
   .profile-foot { grid-column: 1; grid-row: 3; align-self: end; }
   .profile-link { font-size: clamp(1rem, 1.35vw, 1.6rem); }
 
