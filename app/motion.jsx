@@ -28,6 +28,11 @@ export default function Opening() {
     const caseButtons = [...stage.querySelectorAll(".case-button")];
     const previews = [...stage.querySelectorAll(".app-preview")];
     const previewToggles = [...stage.querySelectorAll(".preview-toggle")];
+    const laptopScreen = stage.querySelector(".laptop-screen");
+    const modeBar = stage.querySelector(".screen-modes");
+    const modeButtons = [...modeBar.querySelectorAll("[data-screen-mode]")];
+    const modePill = modeBar.querySelector(".screen-modes-pill");
+    const explored = cases.map(() => new Set([0]));
     const themedPanels = [...viewport.querySelectorAll(":scope > main > [data-theme], :scope > footer[data-theme]")];
     const panels = [...viewport.querySelectorAll(":scope > main > section, :scope > footer")];
     const projects = track.closest("section");
@@ -90,10 +95,20 @@ export default function Opening() {
       flash.animate([{ opacity: 0 }, { opacity: first ? 0.55 : 0.35 }, { opacity: 0 }], { duration: first ? 600 : 420, easing: "ease-out" });
     }
 
+    // The tabs above the laptop: "What's inside" (slides) or "Preview app" for cases that have one.
+    function placeModePill() {
+      const on = modeButtons.find((button) => button.getAttribute("aria-pressed") === "true");
+      if (!on || modeBar.hidden) return;
+      modePill.style.width = `${on.offsetWidth}px`;
+      modePill.style.transform = `translateX(${on.offsetLeft - modePill.offsetLeft}px)`;
+    }
+
     function setPreview(index) {
       const target = String(index);
       previews.forEach((preview) => { preview.hidden = preview.dataset.previewFor !== target; });
       previewToggles.forEach((toggle) => toggle.setAttribute("aria-pressed", String(toggle.dataset.preview === target)));
+      modeButtons.forEach((button) => button.setAttribute("aria-pressed", String((button.dataset.screenMode === "app") === index >= 0)));
+      placeModePill();
       if (index < 0) return;
       if (!horizontal.matches) stage.querySelector(".laptop").scrollIntoView({ behavior: motion.matches ? "auto" : "smooth", block: "center" });
       if (!motion.matches) flash.animate([{ opacity: 0 }, { opacity: 0.4 }, { opacity: 0 }], { duration: 450, easing: "ease-out" });
@@ -106,8 +121,20 @@ export default function Opening() {
       activeCase = index;
       cases.forEach((item, order) => item.toggleAttribute("data-active", order === index));
       screens.forEach((screen, order) => screen.toggleAttribute("data-active", order === index));
+      modeBar.hidden = !cases[index].hasAttribute("data-preview");
+      placeModePill();
       if (stageMode === "case" && !motion.matches) playCaseIn(index, first);
     }
+
+    function onModeClick(event) {
+      const wantsApp = event.currentTarget.dataset.screenMode === "app";
+      setPreview(wantsApp && activeCase >= 0 ? Number(cases[activeCase].dataset.preview ?? -1) : -1);
+    }
+
+    // Slides are drawn on a 1200 × 750 stage; scale them to the screen's real width.
+    const scaleSlides = () => laptopScreen.style.setProperty("--stage-scale", (laptopScreen.clientWidth / 1200).toFixed(4));
+    const screenResize = new ResizeObserver(scaleSlides);
+    screenResize.observe(laptopScreen);
 
     function updateScrollEffects() {
       if (!horizontal.matches) {
@@ -143,22 +170,50 @@ export default function Opening() {
       setCase(clamp(Math.floor((distance - metrics.dive) / metrics.step), 0, cases.length - 1));
     }
 
-    function selectConcept(button) {
+    // Selecting a concept updates the list, the Explored count, the detail below the list and the
+    // laptop screen (the matching slide, or the sketch's demo state). `used` marks a concept that the
+    // example app just exercised: the row flashes and the detail reads "Just used".
+    function selectConcept(button, { used = false } = {}) {
       const item = button.closest(".case");
-      const screen = screens[cases.indexOf(item)];
+      const caseIndex = cases.indexOf(item);
+      const screen = screens[caseIndex];
       const order = button.dataset.concept;
       item.querySelectorAll(".concept").forEach((concept) => concept.setAttribute("aria-pressed", String(concept === button)));
+      explored[caseIndex].add(Number(order));
+      item.querySelectorAll(".concept").forEach((concept) => concept.toggleAttribute("data-seen", explored[caseIndex].has(Number(concept.dataset.concept))));
+      item.querySelector(".concept-explored b").textContent = explored[caseIndex].size;
       let shown;
       item.querySelectorAll("[data-concept-detail]").forEach((detail) => {
         detail.hidden = detail.dataset.conceptDetail !== order;
+        detail.toggleAttribute("data-used", used && !detail.hidden);
         if (!detail.hidden) shown = detail;
       });
       if (button.dataset.demo) screen.dataset.demo = button.dataset.demo;
+      const slideEls = [...screen.querySelectorAll(".sl-slide")];
+      const slide = slideEls.findIndex((element) => element.dataset.slide === button.dataset.demo);
+      if (slide >= 0) {
+        screen.style.setProperty("--slide", slide);
+        slideEls.forEach((element, index) => element.classList.toggle("is-active", index === slide));
+        screen.querySelectorAll(".sl-pager span").forEach((dot, index) => dot.classList.toggle("is-on", index === slide));
+      }
       const chip = screen.querySelector(".screen-chip");
-      if (chip) chip.textContent = button.getAttribute("aria-label");
+      if (chip) chip.textContent = button.querySelector(".concept-title").textContent;
       if (motion.matches) return;
       shown.animate([{ opacity: 0, transform: "translateY(.5rem)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2, .8, .2, 1)" });
-      if (stageMode === "case") flash.animate([{ opacity: 0 }, { opacity: 0.2 }, { opacity: 0 }], { duration: 320, easing: "ease-out" });
+      if (used) {
+        button.animate([{ backgroundColor: "rgb(255 59 31 / .32)" }, { backgroundColor: "rgb(255 59 31 / 0)" }], { duration: 900, easing: "ease-out" });
+      } else if (stageMode === "case" && slide < 0) {
+        flash.animate([{ opacity: 0 }, { opacity: 0.2 }, { opacity: 0 }], { duration: 320, easing: "ease-out" });
+      }
+    }
+
+    // The example app reports which concept an action demonstrates (scroll, next page, like, sound).
+    function onConceptUsed(event) {
+      const preview = previews.find((element) => !element.hidden);
+      const item = preview && cases.find((element) => element.dataset.preview === preview.dataset.previewFor);
+      if (!item) return;
+      const button = item.querySelector(`.concept[data-demo="${event.detail?.demo}"]`);
+      if (button) selectConcept(button, { used: true });
     }
 
     function onConceptClick(event) {
@@ -219,6 +274,9 @@ export default function Opening() {
     window.addEventListener("popstate", onPopState);
     caseButtons.forEach((button) => button.addEventListener("click", stepCase));
     stage.addEventListener("click", onConceptClick);
+    modeButtons.forEach((button) => button.addEventListener("click", onModeClick));
+    window.addEventListener("concept:used", onConceptUsed);
+    document.fonts?.ready.then(placeModePill);
     measureTrack();
     updateScrollEffects();
 
@@ -409,6 +467,9 @@ export default function Opening() {
       window.removeEventListener("popstate", onPopState);
       caseButtons.forEach((button) => button.removeEventListener("click", stepCase));
       stage.removeEventListener("click", onConceptClick);
+      modeButtons.forEach((button) => button.removeEventListener("click", onModeClick));
+      window.removeEventListener("concept:used", onConceptUsed);
+      screenResize.disconnect();
       sidebar.dataset.theme = "paper";
       window.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
-import { Icon, ProjectScreen, projects } from "./projects";
+import { ProjectScreen, projects } from "./projects";
 import OneDPreview from "./preview";
 
 const stack = [
@@ -66,6 +66,11 @@ export default function Home() {
                 </h2>
 
                 <div className="laptop">
+                  <div className="screen-modes" role="group" aria-label="Laptop screen" hidden>
+                    <span className="screen-modes-pill" aria-hidden="true" />
+                    <button type="button" data-screen-mode="inside" aria-pressed="true">{"What's inside"}</button>
+                    <button type="button" data-screen-mode="app" aria-pressed="false"><span className="play-glyph" aria-hidden="true" />Preview app</button>
+                  </div>
                   <div className="laptop-lid">
                     <div className="laptop-screen">
                       <video className="screen-intro" muted loop playsInline preload="none" poster="/assets/selected-projects.webp" aria-hidden="true">
@@ -74,7 +79,7 @@ export default function Home() {
                       {projects.map((project, index) => (
                         <div key={project.name} className="screen-case" data-case={index} data-screen={project.screen ?? "pending"} data-demo={project.concepts[0]?.demo} aria-hidden="true">
                           <ProjectScreen project={project} index={index} />
-                          {project.concepts.length > 0 && <span className="screen-chip">{project.concepts[0].title}</span>}
+                          {project.screen !== "slides" && project.concepts.length > 0 && <span className="screen-chip">{project.concepts[0].title}</span>}
                         </div>
                       ))}
                       {projects.map((project, index) => project.preview && (
@@ -90,7 +95,7 @@ export default function Home() {
 
                 <ol className="case-list">
                   {projects.map((project, index) => (
-                    <li key={project.name} className="case" data-case={index}>
+                    <li key={project.name} className="case" data-case={index} data-preview={project.preview ? index : undefined}>
                       <article className="ticket">
                         <span className="punch" aria-hidden="true" />
                         <h3 className={project.name.length > 16 ? "is-long" : undefined}>{project.name}</h3>
@@ -108,19 +113,25 @@ export default function Home() {
                             <span className="when-open">Close preview</span>
                           </button>
                         )}
-                        <p className="concept-label">{"// What's inside"}</p>
-                        <div className="concept-grid" role="group" aria-label={`${project.name} concepts`}>
+                        <p className="concept-head">
+                          <span className="concept-label">{"// What's inside"}</span>
+                          <span className="concept-explored">Explored <b>1</b> / {project.concepts.length}</span>
+                        </p>
+                        <ol className="concept-list" aria-label={`${project.name} concepts`}>
                           {project.concepts.map((concept, order) => (
-                            <button key={concept.title} type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} aria-label={concept.title}>
-                              <Icon name={concept.icon} />
-                              <span className="concept-num" aria-hidden="true">{order + 1}</span>
-                            </button>
+                            <li key={concept.title}>
+                              <button type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} data-seen={order === 0 || undefined}>
+                                <span className="concept-num" aria-hidden="true">{pad(order + 1)}</span>
+                                <span className="concept-title">{concept.title}</span>
+                                <span className="concept-tag">{concept.tag}</span>
+                              </button>
+                            </li>
                           ))}
-                        </div>
+                        </ol>
                         <div className="concept-detail" aria-live="polite">
                           {project.concepts.map((concept, order) => (
                             <div key={concept.title} data-concept-detail={order} hidden={order !== 0}>
-                              <p className="concept-index">Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
+                              <p className="concept-index"><span className="concept-just">Just used · </span>Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
                               <h4>{concept.title}</h4>
                               <p>{concept.text}</p>
                               {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}

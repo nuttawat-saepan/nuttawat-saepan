@@ -9,6 +9,8 @@ const MAX_PAGES = 5;
 const tones = ["#2c2c2a", "#3b2723", "#22302a", "#282a35"];
 
 const pad = (value) => String(value).padStart(2, "0");
+// Tell the case beside the laptop which concept an action just demonstrated (see motion.jsx).
+const used = (demo) => window.dispatchEvent(new CustomEvent("concept:used", { detail: { demo } }));
 const compact = (value) => (value >= 1000 ? `${(value / 1000).toFixed(1).replace(/\.0$/, "")}K` : String(value));
 const makeClips = (start, count) => Array.from({ length: count }, (_, offset) => {
   const id = start + offset + 1;
@@ -41,6 +43,7 @@ export default function OneDPreview() {
     fetching.current = true;
     setLoading(true);
     setLog(`Near the end · fetching page ${pages + 1} by cursor`);
+    used("cursor");
     timers.current.page = setTimeout(() => {
       setClips((current) => [...current, ...makeClips(current.length, NEXT_PAGE)]);
       setPages((count) => count + 1);
@@ -55,13 +58,17 @@ export default function OneDPreview() {
   function onScroll() {
     const element = feed.current;
     const index = Math.round(element.scrollTop / element.clientHeight);
-    if (index !== active && index < clips.length) setActive(index);
+    if (index !== active && index < clips.length) {
+      setActive(index);
+      used("shared");
+    }
   }
 
   function toggleLike(id) {
     const next = !liked[id];
     setLiked((current) => ({ ...current, [id]: next }));
     setLog(`${next ? "Liked" : "Unliked"} ${pad(id)} on screen · syncing…`);
+    used("optimistic");
     clearTimeout(timers.current[id]);
     timers.current[id] = setTimeout(() => setLog(`${pad(id)} synced · only the last state was sent`), 400);
   }
@@ -69,6 +76,7 @@ export default function OneDPreview() {
   function toggleSound() {
     setMuted((current) => !current);
     setLog(muted ? "Sound on · remembered across the feed" : "Muted");
+    used("autoplay");
   }
 
   const mounted = [active - 1, active, active + 1].filter((index) => index >= 0 && index < clips.length).map((index) => pad(clips[index].id));

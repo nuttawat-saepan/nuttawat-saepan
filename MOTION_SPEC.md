@@ -1,3 +1,21 @@
+# Chapter 04 cases: labelled concepts, slides and screen tabs — 22 November 2026
+
+User decision: merge this session's prototype with the "Shorts Laptop Preview" from another chat. Keep that file's slide visuals, screen tabs and app-to-concept link, but write all content from PROJECT_CONCEPTS.md. Several of that file's details (prefetch at 2 clips, ad as 5th slot, impression after 1 s, `useFeed()`, ~180 ms) are not in the source and were not used.
+
+Each case has three layers:
+1. **Glance (left column).** The ticket, then a one-line summary, then "// What's inside" with "Explored n / N". Below that, a labelled list replaces the icon circles. Each row shows its number, title and skill tag (PERF, DATA, UX, BACKEND, …; tag wording is a draft for the user to confirm). A red dot marks rows already opened. The column now starts at 13dvh (11dvh on narrower desktops) and runs down to just above the case buttons.
+2. **Concept (left + laptop).** Clicking a row shows its detail (and Learning, where present) and changes the laptop screen.
+   - oneD: a node-graph slide per concept, drawn on a fixed 1200 × 750 stage scaled to the screen (`--stage-scale`). The slides sit in a vertical track that glides to the selected one (1 s, cubic-bezier(.72, 0, .18, 1)). Nodes rise in sequence (700 ms, staggered 90 ms), red edges draw in (900 ms, +350 ms), and the title drops in. A pager down the right side shows which slide is shown. The wheel is never captured inside the screen.
+   - ThaiThai keeps its phone sketch.
+   - Go2, LCS and Beachboy show "Video preview coming soon" until real images arrive. The lens design waits on the Beachboy and Go2 photos.
+3. **Try it (laptop, oneD only).** Tabs above the laptop read "What's inside | ▶ Preview app", with a red pill that slides between them. They appear only in case mode and only for cases with an example app. While the app is open, its actions report the concept they demonstrate (scroll → shared player, next page → cursor feed, like → optimistic UI, sound → autoplay). The matching row flashes red (900 ms) and the detail reads "Just used · Concept 0n / 07". Clicking any row closes the app and goes back to that row's slide.
+
+On mobile there are no tabs or slides. The case keeps its Preview button, and the list and detail stack as before.
+
+Also fixed: a URL with a hash on load threw before the wheel state existed, which stopped the loader and every scroll effect.
+
+---
+
 # Desktop scroll model follows the reference — 22 November 2026
 
 Observed on the reference (1440×900): the document scrolls vertically (about 11,400 px tall). A GSAP ScrollTrigger pin holds a full-screen row of panels while that scroll moves it with translateX, one to one, and Lenis smooths the scroll. The row stops moving for one viewport of scroll during "THE WORK", where the scroll drives the zoom instead.
