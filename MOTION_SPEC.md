@@ -1,3 +1,27 @@
+# Mobile layout and the concept accordion — 23 November 2026
+
+User decision: build all 8 items of the mobile proposal.
+
+**Concept list (desktop and mobile).** It is now an icon accordion, replacing the flat list.
+- Each row shows the concept's icon in a circle, then the title, then the skill tag as plain small text.
+- The open row's icon fills red. A red dot on an icon marks concepts already opened.
+- The detail (eyebrow, text, Learning, Measured) opens right under its row, not below the list.
+- Rows are at least 2.9rem tall on phones and 2.55rem on desktop.
+- Phones and narrower desktops (≤1279px wide or ≤819px tall) show the first four rows plus "+N more". The open row always shows.
+- On desktop the case column sits above the laptop, and the laptop base is 108% wide (was 116%) so it no longer runs under the column.
+
+**Phones** (anything that isn't the horizontal desktop layout):
+1. *What I do*: the three areas are a row of cards you swipe sideways (scroll-snap, each 84% wide), so the next card peeks in. The chapter shrinks from 1,508px to about 780px.
+2. *Sticky screen*: the laptop sticks under the top bar on a full-width ink band. It shows the case crossing a reading line 60% down the screen. Above the first case the intro montage plays; past the last case, the last case stays shown. Picking a concept changes the slide as on desktop.
+3. *Diagram viewer*: tapping the screen ("⤢ Tap to zoom") opens the current slide full screen. It is drawn at up to 0.7 scale (text about 15px) and pans sideways. The arrows step through the concepts, and ✕, Escape or a swipe down closes it.
+4. *Compact ticket*: the name, then scope · stack · period on one wrapped line. The labels and bottom punch holes are dropped.
+5. *Preview app*: opens full screen below the top bar, with the feed in the top 70% and the readout below. ✕ sits at the top centre, and the page behind can't scroll.
+6. *Home*: less empty space (78svh), and the scroll cue points down.
+
+Checked at 360, 390 and 430 wide: no sideways overflow and no console errors. All desktop checks still pass.
+
+---
+
 # What I do replaces Techstack — 22 November 2026
 
 User decision: What I do replaces Techstack and sits between Profile and Projects. The story reads who → what I can do → proof → contact. Section labels are now (01) Quick intro, (02) What I do, (03) Selected projects, (04) Contact. The menu lists Home, Profile, What I do, Projects, Contact. Theme rhythm: paper, ink, paper, ink, red.

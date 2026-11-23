@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
-import { ProjectScreen, areas, caseId, projects } from "./projects";
+import { Icon, ProjectScreen, areas, caseId, projects } from "./projects";
 import OneDPreview from "./preview";
 
 const pad = (value) => String(value).padStart(2, "0");
@@ -108,6 +108,7 @@ export default function Home() {
                       ))}
                       {projects.map((project, index) => project.preview && (
                         <div key={project.name} className="app-preview" data-preview-for={index} role="region" aria-label={`${project.name} example app preview`} hidden>
+                          <button type="button" className="app-close" aria-label="Close preview">✕</button>
                           <OneDPreview />
                         </div>
                       ))}
@@ -141,28 +142,33 @@ export default function Home() {
                           <span className="concept-label">{"// What's inside"}</span>
                           <span className="concept-explored">Explored <b>1</b> / {project.concepts.length}</span>
                         </p>
+                        {/* Accordion: each concept's detail opens right under its row */}
                         <ol className="concept-list" aria-label={`${project.name} concepts`}>
-                          {project.concepts.map((concept, order) => (
-                            <li key={concept.title}>
-                              <button type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} data-seen={order === 0 || undefined}>
-                                <span className="concept-num" aria-hidden="true">{pad(order + 1)}</span>
-                                <span className="concept-title">{concept.title}</span>
-                                <span className="concept-tag">{concept.tag}</span>
-                              </button>
-                            </li>
-                          ))}
+                          {project.concepts.map((concept, order) => {
+                            const detailId = `${caseId(project.name)}-concept-${order + 1}`;
+                            return (
+                              <li key={concept.title}>
+                                <button type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} aria-expanded={order === 0} aria-controls={detailId} data-seen={order === 0 || undefined}>
+                                  <span className="concept-icon" aria-hidden="true"><Icon name={concept.icon} /></span>
+                                  <span className="concept-title">{concept.title}</span>
+                                  <span className="concept-tag">{concept.tag}</span>
+                                </button>
+                                <div className="concept-detail" id={detailId} data-concept-detail={order} hidden={order !== 0} aria-live="polite">
+                                  <p className="concept-index"><span className="concept-just">Just used · </span>Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
+                                  <p>{concept.text}</p>
+                                  {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}
+                                  {concept.measured && <p className="concept-learn"><span>Measured</span>{concept.measured}</p>}
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ol>
-                        <div className="concept-detail" aria-live="polite">
-                          {project.concepts.map((concept, order) => (
-                            <div key={concept.title} data-concept-detail={order} hidden={order !== 0}>
-                              <p className="concept-index"><span className="concept-just">Just used · </span>Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
-                              <h4>{concept.title}</h4>
-                              <p>{concept.text}</p>
-                              {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}
-                              {concept.measured && <p className="concept-learn"><span>Measured</span>{concept.measured}</p>}
-                            </div>
-                          ))}
-                        </div>
+                        {project.concepts.length > 4 && (
+                          <button type="button" className="concept-more" aria-expanded="false">
+                            <span className="when-closed">+ {project.concepts.length - 4} more</span>
+                            <span className="when-open">Show less</span>
+                          </button>
+                        )}
                         <p className="case-count" aria-hidden="true">{pad(index + 1)} / {total}</p>
                       </div>
                     </li>
@@ -177,6 +183,20 @@ export default function Home() {
                     next case <span className="case-circle" aria-hidden="true">→</span>
                   </button>
                 </div>
+
+                {/* Phones: tapping the sticky screen opens the current slide here, readable and pannable */}
+                <dialog className="slide-viewer" aria-label="Concept diagram">
+                  <div className="viewer-head">
+                    <p className="viewer-title" aria-live="polite" />
+                    <button type="button" className="viewer-close" aria-label="Close diagram">✕</button>
+                  </div>
+                  <div className="viewer-pan"><div className="viewer-size"><div className="viewer-stage" /></div></div>
+                  <div className="viewer-foot">
+                    <button type="button" className="viewer-step" data-viewer-step="-1" aria-label="Previous concept">←</button>
+                    <p className="viewer-hint">ปัดซ้ายขวาเพื่อดูทั้งแผนภาพ · ปัดลงเพื่อปิด</p>
+                    <button type="button" className="viewer-step" data-viewer-step="1" aria-label="Next concept">→</button>
+                  </div>
+                </dialog>
               </div>
             </div>
           </section>

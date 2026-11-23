@@ -110,8 +110,19 @@ export default function Opening() {
       modeButtons.forEach((button) => button.setAttribute("aria-pressed", String((button.dataset.screenMode === "app") === index >= 0)));
       placeModePill();
       if (index < 0) return;
-      if (!horizontal.matches) stage.querySelector(".laptop").scrollIntoView({ behavior: motion.matches ? "auto" : "smooth", block: "center" });
+      // On phones the app opens full screen (CSS), so there is nothing to scroll into view.
       if (!motion.matches) flash.animate([{ opacity: 0 }, { opacity: 0.4 }, { opacity: 0 }], { duration: 450, easing: "ease-out" });
+    }
+
+    // Phones: the sticky laptop shows whichever case crosses a reading line 60% down the screen.
+    // Above the first case, nothing is active and the intro montage plays.
+    function setMobileCase(index) {
+      stage.toggleAttribute("data-case-shown", index >= 0);
+      if (index === activeCase) return;
+      activeCase = index;
+      cases.forEach((item, order) => item.toggleAttribute("data-active", order === index));
+      screens.forEach((screen, order) => screen.toggleAttribute("data-active", order === index));
+      updateVideo();
     }
 
     function setCase(index) {
@@ -136,17 +147,26 @@ export default function Opening() {
     const screenResize = new ResizeObserver(scaleSlides);
     screenResize.observe(laptopScreen);
 
-    function updateScrollEffects() {
+    function updateScrollEffects(scrollPosition = window.scrollY) {
       if (!horizontal.matches) {
         sidebar.dataset.theme = "paper";
         stage.style.removeProperty("--dive");
         stageMode = "intro";
         stage.dataset.mode = stageMode;
+        const line = window.innerHeight * 0.6;
+        let reading = cases.findIndex((item) => {
+          const rect = item.getBoundingClientRect();
+          return rect.top <= line && rect.bottom > line;
+        });
+        // Past the last case (gaps between cases or below the list) keep the nearest case above.
+        if (reading < 0) reading = cases.findLastIndex((item) => item.getBoundingClientRect().bottom <= line);
+        setMobileCase(reading);
         return;
       }
+      stage.removeAttribute("data-case-shown");
 
-      const y = window.scrollY;
-      const x = Math.round(rowOffset(y));
+      const y = scrollPosition;
+      const x = rowOffset(y);
       viewport.style.setProperty("--x", `${-x}px`);
 
       let theme = "paper";
@@ -178,7 +198,10 @@ export default function Opening() {
       const caseIndex = cases.indexOf(item);
       const screen = screens[caseIndex];
       const order = button.dataset.concept;
-      item.querySelectorAll(".concept").forEach((concept) => concept.setAttribute("aria-pressed", String(concept === button)));
+      item.querySelectorAll(".concept").forEach((concept) => {
+        concept.setAttribute("aria-pressed", String(concept === button));
+        concept.setAttribute("aria-expanded", String(concept === button));
+      });
       explored[caseIndex].add(Number(order));
       item.querySelectorAll(".concept").forEach((concept) => concept.toggleAttribute("data-seen", explored[caseIndex].has(Number(concept.dataset.concept))));
       item.querySelector(".concept-explored b").textContent = explored[caseIndex].size;
@@ -198,6 +221,7 @@ export default function Opening() {
       }
       const chip = screen.querySelector(".screen-chip");
       if (chip) chip.textContent = button.querySelector(".concept-title").textContent;
+      if (viewer.open) renderViewer();
       if (motion.matches) return;
       shown.animate([{ opacity: 0, transform: "translateY(.5rem)" }, { opacity: 1, transform: "none" }], { duration: 320, easing: "cubic-bezier(.2, .8, .2, 1)" });
       if (used) {
@@ -217,9 +241,26 @@ export default function Opening() {
     }
 
     function onConceptClick(event) {
+      if (event.target.closest(".slide-viewer")) return;
       const toggle = event.target.closest(".preview-toggle");
       if (toggle) {
         setPreview(toggle.getAttribute("aria-pressed") === "true" ? -1 : Number(toggle.dataset.preview));
+        return;
+      }
+      if (event.target.closest(".app-close")) {
+        setPreview(-1);
+        return;
+      }
+      const more = event.target.closest(".concept-more");
+      if (more) {
+        const open = more.getAttribute("aria-expanded") !== "true";
+        more.setAttribute("aria-expanded", String(open));
+        more.parentElement.querySelector(".concept-list").toggleAttribute("data-expanded", open);
+        return;
+      }
+      // Phones: tapping the sticky screen opens the current slide full size.
+      if (event.target.closest(".laptop-screen") && !horizontal.matches && activeCase >= 0 && previews.every((preview) => preview.hidden)) {
+        openViewer();
         return;
       }
       const button = event.target.closest(".concept");
@@ -227,6 +268,61 @@ export default function Opening() {
       setPreview(-1);
       selectConcept(button);
     }
+
+    // The diagram viewer clones the active slide onto a stage scaled so its text reads at ~14 px;
+    // the slide is wider than the phone, so it pans sideways. Arrows step through the concepts.
+    const viewer = stage.querySelector(".slide-viewer");
+    const viewerTitle = viewer.querySelector(".viewer-title");
+    const viewerPan = viewer.querySelector(".viewer-pan");
+    const viewerSize = viewer.querySelector(".viewer-size");
+    const viewerStage = viewer.querySelector(".viewer-stage");
+    const viewerSteps = [...viewer.querySelectorAll("[data-viewer-step]")];
+    const pad = (value) => String(value).padStart(2, "0");
+
+    function renderViewer() {
+      const item = cases[activeCase];
+      const slide = item && screens[activeCase].querySelector(".sl-slide.is-active");
+      if (!slide) return false;
+      const buttons = [...item.querySelectorAll(".concept")];
+      const current = buttons.findIndex((button) => button.getAttribute("aria-pressed") === "true");
+      const scale = clamp((window.innerHeight - 200) / 750, 0.5, 0.7);
+      viewerSize.style.width = `${Math.round(1200 * scale)}px`;
+      viewerSize.style.height = `${Math.round(750 * scale)}px`;
+      viewerStage.style.transform = `scale(${scale})`;
+      viewerStage.replaceChildren(slide.cloneNode(true));
+      viewerTitle.innerHTML = `<b>${pad(current + 1)} / ${pad(buttons.length)}</b> · ${buttons[current].querySelector(".concept-title").textContent}`;
+      viewerSteps[0].disabled = current <= 0;
+      viewerSteps[1].disabled = current >= buttons.length - 1;
+      viewerPan.scrollLeft = 0;
+      return true;
+    }
+
+    function openViewer() {
+      if (renderViewer()) viewer.showModal();
+    }
+
+    function onViewerStep(event) {
+      const buttons = [...cases[activeCase].querySelectorAll(".concept")];
+      const current = buttons.findIndex((button) => button.getAttribute("aria-pressed") === "true");
+      const next = buttons[clamp(current + Number(event.currentTarget.dataset.viewerStep), 0, buttons.length - 1)];
+      if (next) selectConcept(next);
+    }
+
+    const closeViewer = () => viewer.close();
+    // Swipe down anywhere on the viewer to close it (sideways drags pan the diagram instead).
+    let swipeFrom = null;
+    const onViewerDown = (event) => { swipeFrom = { x: event.clientX, y: event.clientY }; };
+    const onViewerUp = (event) => {
+      if (!swipeFrom) return;
+      const dx = event.clientX - swipeFrom.x;
+      const dy = event.clientY - swipeFrom.y;
+      swipeFrom = null;
+      if (dy > 90 && Math.abs(dx) < 70) viewer.close();
+    };
+    viewer.querySelector(".viewer-close").addEventListener("click", closeViewer);
+    viewerSteps.forEach((button) => button.addEventListener("click", onViewerStep));
+    viewer.addEventListener("pointerdown", onViewerDown);
+    viewer.addEventListener("pointerup", onViewerUp);
 
     function stepCase(event) {
       const next = activeCase + Number(event.currentTarget.dataset.step);
@@ -272,7 +368,10 @@ export default function Opening() {
 
     const viewportResize = new ResizeObserver(onResize);
     viewportResize.observe(viewport);
-    window.addEventListener("scroll", updateScrollEffects, { passive: true });
+    function onScroll() {
+      if (!scrollFrame) updateScrollEffects();
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
     document.addEventListener("click", onAnchorClick);
     window.addEventListener("popstate", onPopState);
     caseButtons.forEach((button) => button.addEventListener("click", stepCase));
@@ -284,7 +383,7 @@ export default function Opening() {
     updateScrollEffects();
 
     function updateVideo() {
-      if (videoVisible && !motion.matches && stageMode !== "case") {
+      if (videoVisible && !motion.matches && stageMode !== "case" && !stage.hasAttribute("data-case-shown")) {
         workVideo.play().catch(() => {});
       } else {
         workVideo.pause();
@@ -297,7 +396,8 @@ export default function Opening() {
     });
     workObserver.observe(workVideo);
 
-    let scrollFrame = 0;
+    var scrollFrame = 0;
+    let scrollPosition = window.scrollY;
     let scrollTarget = 0;
     let previousFrameTime = 0;
 
@@ -310,25 +410,25 @@ export default function Opening() {
     const maxScrollTop = () => document.documentElement.scrollHeight - window.innerHeight;
 
     function animateWheelScroll(now) {
-      const position = window.scrollY;
       scrollTarget = Math.min(scrollTarget, maxScrollTop());
-      const distance = scrollTarget - position;
+      const distance = scrollTarget - scrollPosition;
       const elapsed = previousFrameTime ? now - previousFrameTime : 16;
       previousFrameTime = now;
 
       if (Math.abs(distance) < 1) {
         window.scrollTo({ top: scrollTarget, behavior: "instant" });
+        updateScrollEffects(scrollTarget);
         stopWheelScroll();
         return;
       }
 
-      const step = distance * (1 - Math.exp(-elapsed / 180));
-      window.scrollTo({ top: position + Math.sign(step) * Math.max(1, Math.abs(step)), behavior: "instant" });
+      scrollPosition += distance * (1 - Math.exp(-elapsed / 180));
+      window.scrollTo({ top: scrollPosition, behavior: "instant" });
+      updateScrollEffects(scrollPosition);
       scrollFrame = requestAnimationFrame(animateWheelScroll);
     }
 
-    // Wheel input is eased towards its target (180 ms time constant). A sideways trackpad swipe moves
-    // the page one to one, since the row runs sideways anyway. Panels that scroll inside themselves
+    // Wheel and sideways trackpad input ease towards the same target. Panels that scroll inside themselves
     // (concept copy, the example app's feed) get the wheel first.
     function onWheel(event) {
       const opening = root.dataset.opening && root.dataset.opening !== "revealing";
@@ -352,10 +452,11 @@ export default function Opening() {
 
       event.preventDefault();
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1;
-      const base = scrollFrame ? scrollTarget : window.scrollY;
+      if (!scrollFrame) scrollPosition = window.scrollY;
+      const base = scrollFrame ? scrollTarget : scrollPosition;
       scrollTarget = clamp(base + delta * unit, 0, maxScrollTop());
 
-      if (motion.matches || sideways) {
+      if (motion.matches) {
         stopWheelScroll();
         window.scrollTo({ top: scrollTarget, behavior: "instant" });
       } else if (!scrollFrame) {
@@ -465,7 +566,7 @@ export default function Opening() {
       stage.style.removeProperty("--dive");
       viewport.style.removeProperty("--x");
       root.style.removeProperty("--travel");
-      window.removeEventListener("scroll", updateScrollEffects);
+      window.removeEventListener("scroll", onScroll);
       document.removeEventListener("click", onAnchorClick);
       window.removeEventListener("popstate", onPopState);
       caseButtons.forEach((button) => button.removeEventListener("click", stepCase));
@@ -473,6 +574,12 @@ export default function Opening() {
       modeButtons.forEach((button) => button.removeEventListener("click", onModeClick));
       window.removeEventListener("concept:used", onConceptUsed);
       screenResize.disconnect();
+      viewer.querySelector(".viewer-close").removeEventListener("click", closeViewer);
+      viewerSteps.forEach((button) => button.removeEventListener("click", onViewerStep));
+      viewer.removeEventListener("pointerdown", onViewerDown);
+      viewer.removeEventListener("pointerup", onViewerUp);
+      if (viewer.open) viewer.close();
+      stage.removeAttribute("data-case-shown");
       sidebar.dataset.theme = "paper";
       window.removeEventListener("wheel", onWheel);
       document.removeEventListener("pointerdown", stopWheelScroll);
