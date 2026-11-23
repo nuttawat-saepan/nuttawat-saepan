@@ -346,15 +346,18 @@ function edgePath(from, to) {
   return { d: `M${sx} ${sy}C${sx + curve} ${sy} ${tx - curve} ${ty} ${tx} ${ty}`, sx, sy, tx, ty };
 }
 
-export default function ConceptSlides({ concepts }) {
+// `active` is optional: the home page drives the slide from motion.jsx (it sets --slide on the
+// screen), while a project page renders it from React state.
+export default function ConceptSlides({ concepts, active }) {
   const shown = concepts.filter((concept) => slides[concept.demo]);
+  const current = active ?? 0;
   return (
-    <div className="sl-stage">
+    <div className="sl-stage" style={active === undefined ? undefined : { "--slide": active }}>
       <div className="sl-track">
         {shown.map((concept, order) => {
           const slide = slides[concept.demo];
           return (
-            <article key={concept.demo} className={order === 0 ? "sl-slide is-active" : "sl-slide"} data-slide={concept.demo}>
+            <article key={concept.demo} className={order === current ? "sl-slide is-active" : "sl-slide"} data-slide={concept.demo}>
               <p className="sl-title">{concept.title}</p>
               <svg className="sl-edges" viewBox="0 0 1200 750" aria-hidden="true">
                 {slide.edges.map(([a, b]) => {
@@ -383,7 +386,7 @@ export default function ConceptSlides({ concepts }) {
         })}
       </div>
       <div className="sl-pager">
-        {shown.map((concept, order) => <span key={concept.demo} className={order === 0 ? "is-on" : undefined}>{order + 1}</span>)}
+        {shown.map((concept, order) => <span key={concept.demo} className={order === current ? "is-on" : undefined}>{order + 1}</span>)}
       </div>
     </div>
   );

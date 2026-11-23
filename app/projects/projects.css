@@ -1,0 +1,107 @@
+/* Project pages (/projects and /projects/[slug]). Kept apart from style.css; reuses its tokens,
+   the laptop, the concept rows (.concept, .concept-icon, .concept-tag), the slides (.sl-*),
+   the example app (.app-preview) and the phone viewer (.slide-viewer). */
+
+/* No loader on these pages: never let the home loader's scroll lock apply. */
+:root:has(main.pj)[data-opening] { overflow: visible; }
+
+.pj { min-height: 100svh; padding: 1.5rem var(--gutter) 3rem; background: var(--bg); color: var(--fg); }
+.pj .dot { font-style: normal; color: var(--red); }
+
+/* Top row: breadcrumb and the example-app button */
+.pj-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; }
+.pj-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; font: 500 .85rem/1.3 var(--sans); color: var(--sub); }
+.pj-crumbs a { color: var(--sub); text-decoration: none; }
+.pj-crumbs a:hover { color: var(--fg); }
+.pj-crumbs [aria-current] { color: var(--sub); }
+.pj-crumbs span:nth-child(3) { color: var(--fg); }
+.pj-preview { display: inline-flex; align-items: center; gap: .55rem; min-height: 2.75rem; padding: .6rem 1.15rem; border: 1.5px solid var(--paper); border-radius: 2rem; background: none; color: var(--paper); font: 600 .85rem/1 var(--sans); cursor: pointer; transition: background-color .2s, color .2s, border-color .2s; }
+.pj-preview:hover { background: var(--paper); color: var(--ink); }
+.pj-preview[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: var(--ink); }
+
+/* Title row: big name, then scope / stack / period */
+.pj-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 1.5rem 3rem; margin-block-start: 1.5rem; padding-block-end: 1.4rem; border-block-end: 1px solid var(--rule); }
+.pj-head h1 { font: 600 clamp(3rem, 9vw, 7.5rem)/.88 var(--sans); letter-spacing: -.06em; }
+.pj-meta { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin: 0; }
+.pj-meta dt { margin-block-end: .4rem; font: 600 .7rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
+.pj-meta dd { margin: 0; font: 500 .95rem/1.35 var(--sans); }
+.pj-summary { max-width: 46rem; margin-block-start: 1.1rem; font: 400 1rem/1.6 var(--thai); color: var(--sub); }
+
+/* Body: concept list · laptop · detail */
+.pj-body { display: grid; gap: 2rem; margin-block-start: 2rem; }
+.pj-label { display: flex; justify-content: space-between; gap: 1rem; padding-block-end: .55rem; border-block-end: 1px solid var(--rule); font: 600 .72rem/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+.pj-label span { color: var(--fg); }
+.pj-label b { color: var(--red); font-weight: 600; }
+.pj-list { margin: 0; padding: 0; list-style: none; }
+.pj-list > li { border-block-end: 1px solid var(--rule); }
+
+/* The laptop here is a plain block: undo the home page's dive (position, transform, scale). */
+.pj .laptop { position: relative; left: auto; top: auto; width: 100%; max-width: none; margin: 0; transform: none; will-change: auto; }
+.pj .laptop-base { width: 108%; margin-inline-start: -4%; }
+
+.pj-detail { align-self: start; }
+.pj-count { display: flex; align-items: baseline; gap: .25rem; font: 600 clamp(3.4rem, 6vw, 5.5rem)/.85 var(--sans); letter-spacing: -.06em; color: var(--red); }
+.pj-count span { font-size: .28em; letter-spacing: 0; color: var(--sub); }
+.pj-just { margin-block-start: .8rem; font: 600 .7rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+.pj-detail h2 { margin-block-start: 1rem; font: 600 clamp(1.6rem, 2.4vw, 2.3rem)/1.05 var(--sans); letter-spacing: -.04em; }
+.pj-tag { display: inline-block; margin-block-start: .8rem; padding: .3rem .7rem; border: 1px solid var(--rule); border-radius: 2rem; font: 600 .66rem/1 var(--sans); letter-spacing: .12em; color: var(--sub); }
+.pj-text { margin-block-start: 1rem; font: 400 1rem/1.65 var(--thai); color: color-mix(in srgb, var(--fg) 86%, transparent); }
+.pj-notes { margin: 1.2rem 0 0; border-block-start: 1px solid var(--rule); }
+.pj-notes div { display: grid; gap: .35rem; padding-block: .8rem; border-block-end: 1px solid var(--rule); }
+.pj-notes dt { font: 600 .68rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+.pj-notes dd { margin: 0; font: 400 .92rem/1.6 var(--thai); }
+.pj-detail { animation: pj-in .35s var(--ease); }
+@keyframes pj-in { from { opacity: 0; transform: translateY(.5rem); } }
+
+/* Footer: progress, arrows, next project */
+.pj-foot { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5rem; margin-block-start: 2.5rem; padding-block-start: 1.4rem; border-block-start: 1px solid var(--rule); }
+.pj-progress { position: relative; height: 2px; max-width: 12rem; background: var(--rule); }
+.pj-progress i { position: absolute; inset: 0 auto 0 0; background: var(--fg); transition: width .35s var(--ease); }
+.pj-steps { display: flex; gap: .7rem; }
+.pj-steps .case-circle { width: 2.9rem; height: 2.9rem; display: grid; place-items: center; padding: 0; border: 1.5px solid currentColor; border-radius: 50%; background: none; color: var(--fg); font-size: 1.1rem; cursor: pointer; }
+.pj-steps .case-circle:disabled { opacity: .3; cursor: default; }
+.pj-next { justify-self: end; display: grid; justify-items: end; gap: .3rem; font: 600 clamp(1.2rem, 2vw, 1.7rem)/1 var(--sans); letter-spacing: -.03em; text-decoration: none; color: var(--fg); }
+.pj-next > span:first-child { font: 600 .68rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
+.pj-next:hover { color: var(--red); }
+
+/* All work */
+.pj-all-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-block: 1.5rem 2rem; padding-block-end: 1.2rem; border-block-end: 1px solid var(--rule); }
+.pj-all-head h1 { font: 600 clamp(3rem, 9vw, 7.5rem)/.88 var(--sans); letter-spacing: -.06em; }
+.pj-all-head p { font: 500 clamp(2rem, 5vw, 4rem)/1 var(--sans); color: var(--sub); }
+.pj-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22.5rem), 1fr)); gap: 2.5rem 1.5rem; margin: 0; padding: 0; list-style: none; }
+.pj-card { display: grid; gap: .45rem; text-decoration: none; color: var(--fg); }
+.pj-card-screen { position: relative; display: block; width: 360px; max-width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 4px; background: #161615; }
+.pj-card-num { margin-block-start: .7rem; font: 600 1.6rem/1 var(--sans); letter-spacing: -.04em; }
+.pj-card-meta { font: 600 .68rem/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+.pj-card-name { font: 600 1.5rem/1.1 var(--sans); letter-spacing: -.035em; }
+.pj-card-count { font: 400 .85rem/1.4 var(--sans); color: var(--sub); }
+.pj-card:hover .pj-card-name { color: var(--red); }
+
+/* Desktop: content sits right of the fixed rail; three columns */
+@media (min-width: 900px) and (min-height: 600px) {
+  .pj { margin-inline-start: var(--rail); padding: 2rem var(--chapter-pad) 2.5rem; }
+  .pj-body { grid-template-columns: minmax(15rem, 1fr) minmax(0, 2.1fr) minmax(16rem, 1.15fr); align-items: start; gap: clamp(1.5rem, 3vw, 3.5rem); }
+  .pj .concept { min-height: 2.6rem; padding-block: .3rem; }
+  .pj-device { position: sticky; top: 2rem; padding-block-start: 1.6rem; }
+}
+/* Narrower desktops: list and detail share the left column so the laptop keeps a useful size */
+@media (min-width: 900px) and (min-height: 600px) and (max-width: 1279px) {
+  .pj-body { grid-template-columns: minmax(15rem, 1fr) minmax(0, 1.5fr); }
+  .pj-list-wrap { grid-column: 1; grid-row: 1; }
+  .pj-detail { grid-column: 1; grid-row: 2; }
+  .pj-device { grid-column: 2; grid-row: 1 / span 2; }
+}
+
+/* Phones: list first, then the laptop sticks under the top bar while the detail is read */
+@media not all and (min-width: 900px) and (min-height: 600px) {
+  .pj-body { grid-template-columns: minmax(0, 1fr); }
+  /* laptop, then the open concept's detail, then the list to pick another */
+  .pj-device { order: -1; position: sticky; top: var(--bar-h); z-index: 5; margin-inline: calc(-1 * var(--gutter)); padding: .8rem var(--gutter) 1rem; background: var(--bg); border-block-end: 1px solid var(--rule); }
+  .pj-list-wrap { order: 2; }
+  .pj .laptop { width: min(76%, 30rem); margin-inline: auto; padding: 0; }
+  .pj .laptop::before { display: none; }
+  .pj-foot { grid-template-columns: auto 1fr; }
+  .pj-progress { display: none; }
+  .pj-next { grid-column: 2; }
+  .pj-card-screen { width: 100%; }
+}

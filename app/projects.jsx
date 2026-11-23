@@ -161,3 +161,6 @@ export const areas = areaList.map((area) => {
   const used = area.projects.map((name) => projects.find((project) => project.name === name));
   return { ...area, projects: used, tools: [...new Set(used.flatMap((project) => project.stack.split(" · ")))] };
 });
+
+// URL segment for a project's own page: /projects/oned, /projects/unitree-go2, …
+export const projectSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
