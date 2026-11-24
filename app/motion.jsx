@@ -13,10 +13,24 @@ const COUNT_HOLD = 1000;
 const COUNT_OUT = 300;
 const FINAL_DELAY = 150;
 const FINAL_IN = 400;
-const FINAL_HOLD = 450;
 const FINAL_OUT = 400;
 const INK_FADE_START = 300;
 const HERO_DURATION = 1650;
+const SCROLL_EASE_MS = 240;
+// Hairline under the counter (concept B, timed to the reference 2026-11-24 19-42-49.mp4): the rule
+// draws in, a fill runs to 97% with the wheels, then completes at "100%"; afterwards the fill clears
+// off to the right and the rule retracts. The tag at the fill's tip names the stage it has reached.
+const RULE_IN = 420;
+const RULE_DELAY = 300;
+const LINE_EASE = "cubic-bezier(.7, 0, .15, 1)";
+const FILL_CLEAR = 140;
+const RULE_GAP = 150;
+const RULE_OUT = 300;
+const STAGES = [[0, "fetching web"], [.34, "building apps"], [.67, "booting robotics"]];
+
+// The loader plays on every full load of home (a reload included) but not when home is reached by
+// navigating inside the site: this module outlives client-side navigation, a reload starts it fresh.
+let openedInThisDocument = false;
 
 export default function Opening() {
   const overlay = useRef(null);
@@ -198,23 +212,15 @@ export default function Opening() {
         return;
       }
 
-      scrollPosition += distance * (1 - Math.exp(-elapsed / 180));
+      scrollPosition += distance * (1 - Math.exp(-elapsed / SCROLL_EASE_MS));
       window.scrollTo({ top: scrollPosition, behavior: "instant" });
       updateScrollEffects(scrollPosition);
       scrollFrame = requestAnimationFrame(animateWheelScroll);
     }
 
-    // Mouse wheels step in whole notches (wheelDelta in multiples of 120, or line/page deltas).
-    // Trackpads send small deltas the OS has already smoothed; easing those again made the page lag
-    // behind the fingers, so they move it one to one.
-    function fromTrackpad(event, sideways, delta) {
-      if (event.deltaMode !== 0) return false;
-      const notches = sideways ? event.wheelDeltaX : event.wheelDeltaY;
-      return typeof notches === "number" && notches !== 0 ? notches % 120 !== 0 : !Number.isInteger(delta);
-    }
-
-    // Mouse wheel input eases towards a target; trackpad input (vertical or sideways) follows one to
-    // one. Panels that scroll inside themselves (concept copy, the example app's feed) get the wheel first.
+    // Ease all desktop wheel input, including precision mice and sideways trackpad gestures.
+    // wheelDelta cannot reliably identify the device: the old heuristic bypassed smoothing for
+    // precision wheels too. Panels that can scroll inside themselves still get the wheel first.
     function onWheel(event) {
       const opening = root.dataset.opening && root.dataset.opening !== "revealing";
       if (!horizontal.matches || event.ctrlKey || opening || event.target.closest?.(".fullscreen-menu")) {
@@ -226,7 +232,11 @@ export default function Opening() {
       const delta = sideways ? event.deltaX : event.deltaY;
       if (!sideways) {
         const panel = event.target.closest("section, footer");
-        if (panel && panel.id !== "home") {
+        // Only a panel that can scroll itself takes the wheel. A clipped panel (THE WORK) can still
+        // report a taller scrollHeight from content it clips, which used to hand the wheel to the
+        // browser there and drop the smoothing.
+        const scrolls = panel && /auto|scroll/.test(getComputedStyle(panel).overflowY);
+        if (scrolls && panel.id !== "home") {
           const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
           if (delta > 0 ? remaining > 1 : panel.scrollTop > 1) {
             stopWheelScroll();
@@ -241,7 +251,7 @@ export default function Opening() {
       const base = scrollFrame ? scrollTarget : scrollPosition;
       scrollTarget = clamp(base + delta * unit, 0, maxScrollTop());
 
-      if (motion.matches || fromTrackpad(event, sideways, delta)) {
+      if (motion.matches) {
         stopWheelScroll();
         window.scrollTo({ top: scrollTarget, behavior: "instant" });
       } else if (!scrollFrame) {
@@ -250,14 +260,23 @@ export default function Opening() {
     }
 
     window.addEventListener("wheel", onWheel, { passive: false });
-    // A hash in the URL on load (e.g. /#techstack): go to that panel. This must run after the wheel
-    // state above exists, since scrollToHash stops any wheel glide first.
-    scrollToHash(window.location.hash, "instant");
+    // Refresh starts Home at the first panel, even if a menu click left a section hash in the URL.
+    // Keep direct section links working on a new visit. Run after the wheel state is initialized,
+    // since scrollToHash stops any wheel glide first.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+      if (window.location.hash) history.replaceState(history.state, "", location.pathname + location.search);
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      updateScrollEffects(0);
+    } else {
+      scrollToHash(window.location.hash, "instant");
+    }
     document.addEventListener("pointerdown", stopWheelScroll);
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
     horizontal.addEventListener("change", onResize);
     let pending = 0;
+    let stageFrame = 0;
     let stopped = false;
     const running = [];
 
@@ -265,6 +284,7 @@ export default function Opening() {
       stopped = true;
       running.forEach((animation) => animation.cancel());
       window.clearTimeout(pending);
+      cancelAnimationFrame(stageFrame);
       intro.hidden = true;
       delete root.dataset.opening;
     }
@@ -285,24 +305,65 @@ export default function Opening() {
       return step(new Promise((resolve) => { pending = window.setTimeout(resolve, duration); }));
     }
 
+    // For moves nothing waits on: a skip cancels them, which must not surface as an unhandled rejection.
+    function fire(element, keyframes, options) {
+      play(element, keyframes, options).catch(() => {});
+    }
+
+    // Re-labels the tag as the fill passes each stage; --p is the fill's progress (0–1).
+    function followStages(line, tag) {
+      let shown = 0;
+      (function check() {
+        const progress = parseFloat(getComputedStyle(line).getPropertyValue("--p")) || 0;
+        const stage = STAGES.findLastIndex(([from]) => progress >= from);
+        if (stage !== shown) {
+          shown = stage;
+          tag.textContent = STAGES[stage][1];
+        }
+        stageFrame = requestAnimationFrame(check);
+      })();
+    }
+
     async function runOpening() {
       root.dataset.opening = "counting";
       const [tens, ones] = number.querySelectorAll(".digit-reel");
       const [count, final] = number.querySelectorAll(".opening-count");
+      const line = intro.querySelector(".opening-line");
+      const rule = line.querySelector(".opening-rule");
+      const fill = line.querySelector(".opening-fill");
+      const tag = line.querySelector(".opening-tag");
       const roll = [{ transform: "translateY(0)" }, { transform: "translateY(-9em)" }];
+
+      fire(rule, [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], { duration: RULE_IN, delay: RULE_DELAY, easing: "cubic-bezier(.16, 1, .3, 1)" });
+      fire(tag, [{ opacity: 0 }, { opacity: 1 }], { duration: 150, delay: RULE_DELAY + 80 });
+      // The fill spans the wheels' whole run (tens start → ones land) and stops short at 97%.
+      fire(line, [{ "--p": 0 }, { "--p": .97 }], { duration: REEL_STAGGER + REEL_DURATION, delay: REEL_DELAY, easing: LINE_EASE });
+      followStages(line, tag);
       await Promise.all([
         play(tens, roll, { duration: REEL_DURATION, delay: REEL_DELAY, easing: REEL_EASE }),
         play(ones, roll, { duration: REEL_DURATION, delay: REEL_DELAY + REEL_STAGGER, easing: REEL_EASE }),
       ]);
+      cancelAnimationFrame(stageFrame);
+      // The wait at 99: the tag owns up to the last 1% with a blinking red dot.
+      tag.innerHTML = 'shipping the last 1% <b class="opening-blink">●</b>';
       await pause(COUNT_HOLD);
+      tag.textContent = "ready";
+      fire(line, [{ "--p": .97 }, { "--p": 1 }], { duration: 150, easing: "ease-out" });
       // Both rows share one grid cell (style.css): "99%" leaves upwards as "100%" arrives from below.
-      play(count, [{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-100%)", opacity: 0 }], { duration: COUNT_OUT, easing: "cubic-bezier(.5, 0, .75, 0)" });
+      fire(count, [{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-100%)", opacity: 0 }], { duration: COUNT_OUT, easing: "cubic-bezier(.5, 0, .75, 0)" });
       await play(final, [{ transform: "translateY(100%)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: FINAL_IN, delay: FINAL_DELAY, easing: "cubic-bezier(.22, 1, .36, 1)" });
-      await pause(FINAL_HOLD);
+      // The line leaves as in the reference: fill clears off to the right, then the rule retracts.
+      fill.style.transformOrigin = "100% 50%";
+      await play(fill, [{ transform: "scaleX(1)" }, { transform: "scaleX(0)" }], { duration: FILL_CLEAR, easing: "cubic-bezier(.5, 0, .75, 0)" });
+      await pause(RULE_GAP);
+      fire(tag, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: RULE_OUT - 120 });
+      rule.style.transformOrigin = "100% 50%";
+      await play(rule, [{ transform: "scaleX(1)" }, { transform: "scaleX(0)" }], { duration: RULE_OUT, easing: "cubic-bezier(.65, 0, .35, 1)" });
       root.dataset.opening = "exiting";
       play(final, [{ opacity: 1 }, { opacity: 0 }], { duration: FINAL_OUT, easing: "ease-out" });
       await pause(INK_FADE_START);
       root.dataset.opening = "revealing";
+      markPlayed();
       await pause(HERO_DURATION);
       stopOpening();
     }
@@ -335,14 +396,24 @@ export default function Opening() {
       }
     }
 
-    function skipOpening(event) {
-      if (event.type === "focusin" || event.key === "Escape") stopOpening();
+    function markPlayed() {
+      openedInThisDocument = true;
     }
 
-    // The loader plays once per visit (tab session): coming back from a project page skips it.
-    let played = false;
-    try { played = sessionStorage.getItem("ns-opened") === "1"; sessionStorage.setItem("ns-opened", "1"); } catch {}
-    if (motion.matches || played) {
+    function skipOpening(event) {
+      if (!root.dataset.opening) return;
+      if (event.type === "focusin" || event.key === "Escape") {
+        markPlayed();
+        stopOpening();
+      }
+    }
+
+    // Skip it when home is reached from inside the site: either it already played in this document,
+    // or the visit began on another page (a project page) and home was reached by a link. The flag is
+    // set once the loader finishes or is skipped, not on mount, so React's dev double mount still plays it.
+    let enteredElsewhere = false;
+    try { enteredElsewhere = new URL(performance.getEntriesByType("navigation")[0].name).pathname !== "/"; } catch {}
+    if (motion.matches || openedInThisDocument || enteredElsewhere) {
       stopOpening();
     } else {
       intro.hidden = false;
@@ -382,6 +453,7 @@ export default function Opening() {
   return (
     <div ref={overlay} className="opening" aria-hidden="true">
       <div className="frame opening-inner">
+        <div className="opening-head">
         <div className="opening-mask">
           <div className="opening-stack" ref={counter}>
             <div className="opening-count">
@@ -401,6 +473,13 @@ export default function Opening() {
               <span className="opening-percent">%</span>
             </div>
           </div>
+        </div>
+        {/* Hairline under the counter: a fill runs with the wheels and its tag names each stage. */}
+        <div className="opening-line">
+          <span className="opening-rule" />
+          <span className="opening-fill" />
+          <span className="opening-tag">{STAGES[0][1]}</span>
+        </div>
         </div>
         <span className="opening-caption">Web / Apps / Robotics</span>
       </div>

@@ -1,3 +1,93 @@
+# ThaiThai preview cleanup — 24 November 2026
+
+User screenshot showed a partial next feed clip as a flat green band and the folded laptop stretching behind the phone.
+
+- Feed clips now overlap and cross-fade over 400 ms, replacing the vertical track translation. Each clip fills the feed viewport throughout the transition; the scripted fingertip gesture and feed → live → order → payment sequence remain.
+- The laptop lid still folds when ThaiThai is selected, but both lid and base fade out (350 ms), leaving a standalone phone. They fade back in for web projects; their dimensions stay in flow to avoid a layout jump.
+- Browser check at 1440×900: both clips match the 309 px feed height with top 0; phone mode lid/base opacity is 0. Live/order overlay also rendered in the phone.
+
+---
+
+# Desktop wheel smoothing — 24 November 2026 (latest correction)
+
+User reports no visible smooth scroll using a mouse wheel on desktop.
+
+- Removed `fromTrackpad`: `wheelDelta % 120` is not a reliable device test and could send precision mouse input down the instant-scroll path. All desktop wheel input now eases toward its target, vertical or sideways.
+- Increased the easing time constant from 180 to 240 ms for a more visible glide (about 95% of remaining distance in 720 ms). Reduced motion still moves immediately; touch scrolling and nested scrollable panels keep native behavior.
+- Browser verification at 1440×900, reduced motion off: wheel input moved the document and horizontal row gradually, y 562 → 626 → 740 → 888 → 979 over 335 ms, rather than jumping to the target. This verifies the browser test input; the user's physical mouse feel still needs their assessment.
+
+---
+
+# Refresh returns to Home — 24 November 2026 (latest correction)
+
+User clarification: refreshing Home should return to the first panel, not keep the previous scroll position. This supersedes the scroll-restoration note below.
+
+- Removed the `ns-scroll` save/restore and `pagehide` handler in `app/motion.jsx`.
+- On reload, keep manual browser scroll restoration, clear a section hash with `replaceState` (preserving history state and query parameters), scroll to 0 and reset the horizontal row before the loader reveals Home.
+- A fresh visit with a section URL such as `/#projects` still goes to that section; in-site section navigation remains unchanged. Project routes are not redirected by this change.
+- Verified in the browser: narrow layout Profile → reload gives scrollY 0; desktop 1440×900 direct Projects link gives scrollY 5428 / row −4071px → reload gives scrollY 0 / row 0px, no hash, query retained, loader counting.
+
+---
+
+# Selected projects: device reveal and a live mock per project — 24 November 2026
+
+User decision: the Selected projects laptop shows each project as a short live mock instead of its first concept slide, using motion like the user's references (kisracorp.com `service1–3.mp4`), starting with oneD. What's inside stays on the project pages. The references are Kisra's marketing clips (service1 is oneD's movie side); none of their footage is used.
+
+Observed in the references (4.5 s each, 1920×1080, white background): the laptop rises from flat while its lid swings open (0.1–0.6 s), settles, then a phone (and in service2 a tablet) slides in from the side and settles over the laptop's corner (0.9–2.0 s, ease-out); the screens hold real product screenshots. service3 instead types into a search bar on the laptop.
+
+Implemented (`app/selected-work.jsx`, `app/oned-showcase.jsx`, `app/showcases.jsx`, `app/style.css`; desktop only, as the preview is hidden on phones):
+- **Reveal**: the lid starts closed (rotateX(-88deg), hinge at the bottom, perspective 1600 px). The first time the laptop is 45% in view it rises (translateY 10% → −2% → 0, scale .94 → 1, 900 ms) while the lid opens with a small overshoot (−88° → 5° → 0, 750 ms, cubic-bezier(.22, 1, .36, 1)); the phone follows 850 ms later.
+- **Switching project**: the lid flips up again from −50° with the screen dimmed to 55% (600 ms). To or from ThaiThai the lid instead closes (rotateX(−84deg), brightness .5, 700 ms) or reopens.
+- **oneD laptop screen** — rebuilt to the real layout (user: "Rebuild like real", after recording the live site, `C:\Users\nutta\Videos\2026-11-24 21-54-01.mp4`; the first version invented a nav and a HUD the real page does not have). Mock content only: fictional Thai titles on flat colour posters instead of the channel's artwork, "oneD" as text and the portfolio red instead of the oneD logo and pink, until the user confirms the brand may be used.
+  - *Shorts list* (as on the live site): top bar with "oneD", หน้าหลัก · ดูทีวีสด · ละครแนวตั้ง (red, current) · รายการของฉัน, a search box, an avatar and a "สมัคร PREMIUM" button; a row of large 2:3 posters with "พากย์ไทย" badges and a › button; "เข้าใหม่ล่าสุด" with a row of smaller posters.
+  - *Player* (as on the live site): black, ✕ top-left and a sound icon, a 9:16 player in the middle (caption "<title> · EP.n" at the bottom), an action column to its right (like with count, ตอนทั้งหมด, รายการของฉัน, แชร์) and ↑ ↓ buttons at the far right. Clips are flat colour with two soft figure shapes drifting slowly.
+  - *Flow* (11.2 s, repeats; a pointer acts it out like a screen recording): list → pointer to the second poster, press (scale .96 with a ring) → the player fades in → ↓ (next episode) → like (heart fills red) → ↓ → ✕ → back to the list. The pointer glides 700 ms between targets; pages cross-fade 400 ms.
+- **No oneD phone** (user: "oneD I didn't do phone app, remove it"). The engineering annotations of the first version (shared-player frame, HUD, debounce note) are off the screen; they belong to What's inside.
+- **ThaiThai** (user: "ThaiThai is a phone app"): the laptop folds shut and a phone (27% of the laptop width, 9:19.5) rises in the middle (translateY 25% → 0, 800 ms). Tab names are the real app's, read from `thaithai-flutter` (`footer_menu_bar.dart`, `top_floating_menu.dart`, `app_th.arb`): top สำหรับคุณ · ไลฟ์ · ครีเอเตอร์; bottom หน้าแรก · มอลล์ · + · Fortune AI · โปรไฟล์; ชำระเงิน, ยืนยันสั่งซื้อ, ส่งฟรี. Flow (11.6 s, a fingertip disc acts it out): feed swipe to the next clip → tap ไลฟ์ → live room (host, LIVE, viewers, chat lines arriving, pinned product "เซรั่มหน้าใส ฿299 · ส่งฟรี") → ซื้อเลย → order sheet (total, ยืนยันสั่งซื้อ) → PromptPay QR → สั่งซื้อสำเร็จ → back to the feed. Mock users/products; portfolio red, not the app's blue.
+- **Unitree Go2** (ground station): top bar "Ground station · ROS 2 · Nav2 · FAST-LIO" with a blinking "closed-loop simulation" tag; left, a top-down map (walls, dotted grid) with the red dashed plan through W1 and W2, the robot driving it (0.16 px/ms, 700 ms stop at W1) with 24 scan rays clipped by the walls and a white trail; right, mission n / 2, cmd_vel, an AprilTag camera whose red brackets snap in when the tag locks, and a log (nav2 goals, "mqtt mission/status → W1/W2 reached", "apriltag: id 07 · pose locked"). Ends on "Simulation result — Mission complete — 2 / 2 waypoints", then repeats.
+- **LCS** (invoice tank selection, light admin UI): sidebar แดชบอร์ด · ใบประเมินค่าซ่อม · ใบแจ้งหนี้ (current) · เบิกคืนอะไหล่ · รายงาน; modal "เลือกแทงก์". Flow (11.4 s, pointer): type "TK-01" → spinner for 250 ms (debounce) → results; tick two tanks; a tank of another customer is greyed and shows "คนละลูกค้า — เลือกไม่ได้"; page 2, tick one; back to page 1, the ticks are still there; ยืนยัน → toast "สร้างใบแจ้งหนี้แล้ว · 3 แทงก์" and a new invoice row. Fictional customers (Alpha Logistics, Bravo Chemicals) and tank numbers. Not checked against the real LCS screens (no recording, repo not on this machine).
+- **Beachboy** (mission control): state chip IDLE → PLANNED → RUNNING → COMPLETE, RTK FIX, simulation tag; map with sea strip, dashed work area, margin and a hatched exclusion zone; Coverage panel (spacing 0.8 m, margin 0.5 m, bearing 0°, Preview / Start / Stop). Pointer presses Preview → nine lanes draw in (the top three stop short of the exclusion zone) → Start → the robot runs the serpentine with a wide trail while "Covered" climbs to 89% → "Simulation · 8 × 6 m — 89% covered, no collisions" (the figures in the user's test report).
+- The loops run only for the project on show, after the reveal; reduced motion holds a still frame and skips the reveal.
+- The note under the laptop now reads "Screens are redrawn on mock data from my notes; live sites stay private for NDA or internal projects".
+
+---
+
+# Loader: hairline under the counter (concept B) — 24 November 2026
+
+User decision: concept B of three adaptations of the hairline loader in the user's reference recording (`C:\Users\nutta\Videos\2026-11-24 19-42-49.mp4`, 6.3 s, 1280×720, 30 fps). It keeps the slot-machine counter and its timings from the 23 November entry and adds the hairline beneath it.
+
+Observed in that reference (pixel rows measured per frame): at 0.40 s a "Media loading" label appears and a gray hairline draws left→right (about 400 ms, ease-out) with a white "000%" tag at its start; it holds at 000% for about 1.4 s; from 1.93 s a white fill runs to the right end in about 1.2 s (slow start, fast middle, long glide), the tag riding its tip; it holds at 100% about 400 ms; the fill clears off to the right (about 130 ms), the gray rule retracts (about 300 ms), the label and tag fade; about 0.5 s later the page fades in (about 750 ms).
+
+Implemented (`app/motion.jsx`, `app/style.css`):
+- A 1 px rule (paper at 22%) sits under the counter, clamp(1.5rem, 5dvh, 3rem) below it, across the frame. It draws in left→right (420 ms, +300 ms, cubic-bezier(.16, 1, .3, 1)).
+- A paper fill runs from the tens wheel's start to the ones wheel's landing (1,550 ms, cubic-bezier(.7, 0, .15, 1)) and stops at 97%. A paper tag with ink text rides its tip; instead of a number it names the stage: "fetching web" (from 0), "building apps" (from 34%), "booting robotics" (from 67%).
+- During the 1 s wait at "99%" the tag reads "shipping the last 1%" with a red ● blinking every 500 ms. At the swap it reads "ready" and the fill completes (150 ms).
+- After "100%" settles, the fill clears off to the right (140 ms), then 150 ms later the rule retracts towards the right (300 ms) as the tag fades. This replaces the 450 ms hold on "100%". Then "100%" fades and the ink fades as before.
+- The fill's progress is the registered custom property `--p` (`@property`), animated on `.opening-line`; the fill width and tag position derive from it, and a frame loop re-labels the tag.
+- When it plays (user asked where the loader went, since reloads no longer showed it): on every full load of home, a reload included. It is still skipped when home is reached from inside the site, which was the goal of the earlier "once per visit" rule: after it has played in this document (client navigation back from a project page), or when the visit began on another page. This replaces the sessionStorage flag; the layout's inline script now drops `data-opening` only on pages other than home.
+- Reload keeps the place (user: "why refresh it now start on top/left"): the browser can't restore the scroll itself — the page is one screen long until `measureTrack` sets `--travel`, and the loader locks scrolling — so it fell back to the start. `motion.jsx` now saves `{ path, y }` to sessionStorage (`ns-scroll`) on `pagehide`, sets `history.scrollRestoration = "manual"`, and on a reload of the same path scrolls back to that y under the loader; when the ink fades the visitor is where they left. Without a saved position a URL hash still goes to its panel.
+
+---
+
+# Custom cursor — 24 November 2026
+
+User decision: a custom cursor like bennet.clapat.com's, with six states the user specified from screenshots of that site. Our colours replace its orange (red), and its "eyes" become a smiley face.
+
+Observed on the reference (its `common.js` and computed styles): an 80 px ball shown at scale .5 with a 4 px #999 border, following the pointer with GSAP easing; a 100 px ring rotating every 0.8 s while the preloader runs; on links with a label, scale 1.4, filled with the primary colour, blurred backdrop and a centred text line; on magnetic ("parallax") buttons the ball hides and the button follows the pointer; native cursor hidden.
+
+Implemented (`app/cursor.jsx`, mounted in `app/layout.jsx`; styles in `app/style.css`), desktop pointers only (`hover: hover` and `pointer: fine`); phones keep their native behaviour:
+1. **Default**: a 28 px gray ring (1.5 px, rgb(150 150 146 / .8); first built at 40 px / 3 px, which the user found too big and heavy) that trails the pointer with a 90 ms time constant. The native pointer is hidden.
+2. **Name** (`.hero-name`): **Hello badge** (user's pick N2 of three; replaces the first-built smiley). A 100 px red disc; "HELLO • สวัสดี • HELLO • สวัสดี •" in paper (600, 10.5/100 of the disc) runs round its edge, turning once every 7 s, with a paper dot in the centre. It scales in from .5 (450 ms).
+3. **Top bar and rail controls** (`.site-header a, button`): a 120 px disc of the section's text colour at 7–9% opacity.
+4. **Text buttons** (Scroll, View projects, View all work, Back to home): **Ink sweep** (user's pick B1; replaces the red arrow disc). The ring hides and the button leans towards the pointer (a quarter of the offset, at most 14 px across, 10 px down), easing back when left. A pill in the section's text colour (`--fg`), .35em × .7em larger than the label, sweeps in from the left (450 ms, cubic-bezier(.65, 0, .35, 1)); the label turns the section's background colour (`--bg`) and its underline fades. On the red footer the pill is ink with red text.
+5. **Project routes** (Related work rows and "What's inside", What I do "Seen in" links, `/projects` cards, next project): **Viewfinder** (user's pick R3; replaces the frosted "[ Open ]" disc). The ring opens to a 104 px square of four 16 px corner brackets (2 px, the section's text colour) with a 5 px red centre dot and "[ OPEN ]" (.62rem, tracked .1em) just below the centre.
+6. **Loading** (while `data-opening` is loading, counting or exiting): a 120 px frosted disc (paper at 5% with a 6 px backdrop blur — first 10% / 10 px, user asked for lower opacity; before that a solid #1f1f1e) with "[ Loading ]" in paper, the label filling the disc so its text sits exactly in the centre; the cursor is centred on screen until the pointer moves.
+- Any other control: the ring grows to 56 px and turns red. Pressing shrinks the cursor to 85%.
+- Size changes take 450 ms (var(--ease)); fills 350 ms. Text colour and tints follow the `data-theme` of the section under the pointer, and the state is re-read on scroll and wheel as well as on movement.
+- A modal dialog (the slide viewer) sits in the top layer above the cursor, so the native pointer returns while one is open. Reduced motion: the ring follows exactly and nothing is magnetic.
+
+---
+
 # Home follows the reference: THE WORK → Chapter II, project pages — 24 November 2026
 
 User decision: copy khanhnguyen.design's structure; the case study / example app move to separate pages, as the reference has `/works/<slug>`. Font: a modern sans, not the reference's serif. Video: the user generates it (prompt given in chat) as `public/assets/the-work.mp4`; until then the old montage plays as a fallback `<source>`.

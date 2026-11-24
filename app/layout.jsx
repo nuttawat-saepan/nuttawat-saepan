@@ -1,4 +1,5 @@
 import "./style.css";
+import Cursor from "./cursor";
 
 export const metadata = {
   title: "Nuttawat Saepan — Software Engineer",
@@ -6,9 +7,9 @@ export const metadata = {
 };
 
 // The server renders data-opening="loading" so the home loader covers the first paint. Before that
-// paint, drop it when this tab has already seen the loader (motion.jsx sets the flag) or when the page
-// isn't home, so neither a return visit nor a project page flashes the loader.
-const skipLoader = `try{if(location.pathname!=="/"||sessionStorage.getItem("ns-opened")==="1")document.documentElement.removeAttribute("data-opening")}catch(e){}`;
+// paint, drop it on any page other than home, so a project page never flashes the loader. Home plays
+// it on every full load; motion.jsx skips it when home is reached by navigating inside the site.
+const skipLoader = `try{if(location.pathname!=="/")document.documentElement.removeAttribute("data-opening")}catch(e){}`;
 
 export default function RootLayout({ children }) {
   return (
@@ -16,7 +17,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: skipLoader }} />
       </head>
-      <body>{children}</body>
+      <body>{children}<Cursor /></body>
     </html>
   );
 }
