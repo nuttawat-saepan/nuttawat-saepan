@@ -1,3 +1,26 @@
+# Slot-machine loader — 23 November 2026
+
+User decision: concept A ("Slot machine") from three merges of the old portfolio-2026 loader (`LoadingV3`) with the current counter, with each wheel sliding in one continuous ease-in-out move instead of stepping digit by digit. The user then supplied a reference recording (`C:\Users\nutta\Videos\2026-11-23 23-40-10.mp4`, 5.6 s, 1280×720, 30 fps) and asked to match its speed ratios and transitions only, not its content. This supersedes the 0→100 real count, the ink wipe and the name's mask rise in the 21 November entry; the ink overlay, caption, rail and the rest of the Home entrance stay as specified there.
+
+Observed in the reference (30 fps frames, ±35 ms):
+- "00" holds still, then the tens wheel starts at 0.40 s and the ones wheel at 0.65 s. Each slides 0→9 in about 1.3 s, slow at both ends and fast in the middle, so "99" lands at about 2.0 s.
+- "99" holds about 1.0 s, with a "wait, wait.." caption rising in beneath it.
+- 3.0 s: "99" and the caption slide up out of a top mask while fading (about 300 ms). From 3.15 s, "100" rises from below and fades in (about 400 ms), settling at 3.4 s.
+- "100" holds about 450 ms, then fades out in place (3.85–4.25 s, no movement).
+- Near the end of that fade (4.15 s), the whole black background fades to the light page in about 250 ms.
+- About 350 ms later (4.7 s) the name fades in with a slight upward drift, fully dark by about 5.5 s.
+- Not used: the "wait, wait.." caption, the smaller "100", the light-grey page colour, the orange eyed cursor and the name "bennet".
+
+Implemented (`app/motion.jsx`, `app/style.css`):
+- "00%" rises from the mask (700 ms, +100 ms) and holds; the tens wheel starts at 1.0 s, the ones wheel 250 ms later, each sliding 0→9 in 1,300 ms with cubic-bezier(.65, 0, .35, 1). Earlier tries at 1,100 ms and 1,700 ms are superseded.
+- "99%" holds 1,000 ms. "99%" and "100%" share one grid cell inside the mask: "99%" moves up 100% and fades (300 ms, cubic-bezier(.5, 0, .75, 0)); "100%" starts 150 ms later, from 100% below to place, fading in (400 ms, cubic-bezier(.22, 1, .36, 1)). "100%" stays the same size as the counter.
+- Hold 450 ms; "100%" fades out in place (400 ms, ease-out). 300 ms into that fade the ink overlay fades out (250 ms, ease-out). This replaces the bottom-to-top wipe.
+- The name lines now fade up from .12em below (800 ms, var(--ease), +600 ms and +800 ms after the ink starts fading) instead of rising out of their masks. Grid lines, role, disciplines, Scroll and the sentence keep their 21 November timings.
+- The ink is gone about 5.1 s after the first frame, and the name finishes about 1.4 s later.
+- The wheel and row moves are Web Animations; Escape, focus or reduced motion cancel them and end the opening at once.
+
+---
+
 # Mobile layout and the concept accordion — 23 November 2026
 
 User decision: build all 8 items of the mobile proposal.
@@ -59,9 +82,9 @@ Also fixed: a URL with a hash on load threw before the wheel state existed, whic
 Observed on the reference (1440×900): the document scrolls vertically (about 11,400 px tall). A GSAP ScrollTrigger pin holds a full-screen row of panels while that scroll moves it with translateX, one to one, and Lenis smooths the scroll. The row stops moving for one viewport of scroll during "THE WORK", where the scroll drives the zoom instead.
 
 Implemented (user decision: switch to the reference's model, without GSAP or Lenis):
-- The page scrolls vertically. `.portfolio-viewport` is sticky at the top and clips; `main` and the footer move by `translate3d(--x)`. `body::after` adds `--travel` of height, which is the row's horizontal distance plus the Projects pause. The page scrollbar is hidden so 100vw stays the rail plus one panel.
+- The page scrolls vertically. `.portfolio-viewport` is sticky at the top and clips; `main` and the footer move by a `translate3d()` that motion.jsx writes straight onto them (an inherited `--x` on the viewport re-styled all ~2,500 nodes every frame, about 12 ms). `--dive` is likewise written only onto `.work-title` and `.laptop`, and registered with `@property … inherits: false` so the slides inside the laptop are not re-styled. `body::after` adds `--travel` of height, which is the row's horizontal distance plus the Projects pause. The page scrollbar is hidden so 100vw stays the rail plus one panel.
 - Scroll maps to the row one to one, except at Projects, where the row holds still for `(--dive-len + --case-len × cases)` panel widths. The laptop dive and the case steps read their progress from that held stretch, so their timing is unchanged.
-- The wheel is still eased (180 ms time constant). A sideways trackpad swipe moves the page one to one. Space, PageDown, arrow keys, scroll restoration and the Back button now work natively.
+- The mouse wheel is still eased (180 ms time constant). Trackpad input, vertical or sideways, moves the page one to one, because the OS has already smoothed it and easing it again made the page lag behind the fingers. A wheel notch is recognized by `wheelDelta` in multiples of 120 or by line/page `deltaMode`. Anything else counts as a trackpad, including free-spinning high-resolution wheels. Space, PageDown, arrow keys, scroll restoration and the Back button now work natively.
 - In-page links (Scroll, View projects, menu, Back to home, a hash in the URL on load) go to the panel's place in the row instead of the browser's anchor jump. Each push adds a history entry.
 - The page is locked while the loader counts and exits, and while the menu is open.
 - Mobile is unchanged: a plain vertical document.

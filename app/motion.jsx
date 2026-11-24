@@ -2,10 +2,20 @@
 
 import { useEffect, useRef } from "react";
 
-const ENTRANCE_DURATION = 700;
-const COUNT_DURATION = 2800;
-const HOLD_DURATION = 450;
-const EXIT_DURATION = 350;
+// Slot-machine counter, timed to the user's reference video (2026-11-23 23-40-10.mp4): two digit
+// wheels each slide 0 → 9 in one ease-in-out move, the ones wheel a beat after the tens; "99%" holds,
+// then slides up and fades as "100%" rises in; "100%" fades out and the ink fades off the page.
+const REEL_DELAY = 1000;
+const REEL_DURATION = 1300;
+const REEL_STAGGER = 250;
+const REEL_EASE = "cubic-bezier(.65, 0, .35, 1)";
+const COUNT_HOLD = 1000;
+const COUNT_OUT = 300;
+const FINAL_DELAY = 150;
+const FINAL_IN = 400;
+const FINAL_HOLD = 450;
+const FINAL_OUT = 400;
+const INK_FADE_START = 300;
 const HERO_DURATION = 1650;
 
 export default function Opening() {
@@ -35,6 +45,12 @@ export default function Opening() {
     const explored = cases.map(() => new Set([0]));
     const themedPanels = [...viewport.querySelectorAll(":scope > main > [data-theme], :scope > footer[data-theme]")];
     const panels = [...viewport.querySelectorAll(":scope > main > section, :scope > footer")];
+    // Written every scroll frame, so they go straight onto the elements that use them: an inherited
+    // custom property on an ancestor would re-style every panel and slide beneath it each frame.
+    const row = [...viewport.querySelectorAll(":scope > main, :scope > footer")];
+    const diveTargets = [stage.querySelector(".work-title"), stage.querySelector(".laptop")];
+    let shownX = null;
+    let shownDive = null;
     const projects = track.closest("section");
     const horizontal = window.matchMedia("(min-width: 900px) and (min-height: 600px)");
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
@@ -57,7 +73,8 @@ export default function Opening() {
       if (!horizontal.matches) {
         layout = { pauseAt: 0, pause: 0, maxX: 0, lefts: new Map() };
         root.style.removeProperty("--travel");
-        viewport.style.removeProperty("--x");
+        setRowOffset(null);
+        setDive(null);
         return;
       }
       const lefts = new Map();
@@ -77,6 +94,25 @@ export default function Opening() {
       return left <= layout.pauseAt ? left : left + layout.pause;
     };
     const scrollBehavior = () => (motion.matches ? "instant" : "smooth");
+
+    // null clears the inline value (phone layout, unmount).
+    function setRowOffset(x) {
+      if (x === shownX) return;
+      shownX = x;
+      row.forEach((element) => {
+        if (x === null) element.style.removeProperty("transform");
+        else element.style.transform = `translate3d(${-x}px, 0, 0)`;
+      });
+    }
+
+    function setDive(value) {
+      if (value === shownDive) return;
+      shownDive = value;
+      diveTargets.forEach((element) => {
+        if (value === null) element.style.removeProperty("--dive");
+        else element.style.setProperty("--dive", value);
+      });
+    }
 
     function playCaseIn(index, first) {
       const item = cases[index];
@@ -149,10 +185,10 @@ export default function Opening() {
 
     function updateScrollEffects(scrollPosition = window.scrollY) {
       if (!horizontal.matches) {
-        sidebar.dataset.theme = "paper";
-        stage.style.removeProperty("--dive");
+        if (sidebar.dataset.theme !== "paper") sidebar.dataset.theme = "paper";
+        setDive(null);
         stageMode = "intro";
-        stage.dataset.mode = stageMode;
+        if (stage.dataset.mode !== stageMode) stage.dataset.mode = stageMode;
         const line = window.innerHeight * 0.6;
         let reading = cases.findIndex((item) => {
           const rect = item.getBoundingClientRect();
@@ -166,18 +202,19 @@ export default function Opening() {
       stage.removeAttribute("data-case-shown");
 
       const y = scrollPosition;
-      const x = rowOffset(y);
-      viewport.style.setProperty("--x", `${-x}px`);
+      // Rounded to device pixels: sub-pixel offsets change every frame for nothing visible.
+      const x = Math.round(rowOffset(y) * window.devicePixelRatio) / window.devicePixelRatio;
+      setRowOffset(x);
 
       let theme = "paper";
       for (const panel of themedPanels) {
         if ((layout.lefts.get(panel) ?? 0) <= x) theme = panel.dataset.theme;
       }
-      sidebar.dataset.theme = theme;
+      if (sidebar.dataset.theme !== theme) sidebar.dataset.theme = theme;
 
       const distance = y - layout.pauseAt;
       const progress = metrics.dive > 0 ? clamp(distance / metrics.dive, 0, 1) : 1;
-      stage.style.setProperty("--dive", (progress * progress * (3 - 2 * progress)).toFixed(4));
+      setDive((progress * progress * (3 - 2 * progress)).toFixed(4));
 
       const mode = progress >= 0.999 ? "case" : "intro";
       if (mode !== stageMode) {
@@ -428,8 +465,17 @@ export default function Opening() {
       scrollFrame = requestAnimationFrame(animateWheelScroll);
     }
 
-    // Wheel and sideways trackpad input ease towards the same target. Panels that scroll inside themselves
-    // (concept copy, the example app's feed) get the wheel first.
+    // Mouse wheels step in whole notches (wheelDelta in multiples of 120, or line/page deltas).
+    // Trackpads send small deltas the OS has already smoothed; easing those again made the page lag
+    // behind the fingers, so they move it one to one.
+    function fromTrackpad(event, sideways, delta) {
+      if (event.deltaMode !== 0) return false;
+      const notches = sideways ? event.wheelDeltaX : event.wheelDeltaY;
+      return typeof notches === "number" && notches !== 0 ? notches % 120 !== 0 : !Number.isInteger(delta);
+    }
+
+    // Mouse wheel input eases towards a target; trackpad input (vertical or sideways) follows one to
+    // one. Panels that scroll inside themselves (concept copy, the example app's feed) get the wheel first.
     function onWheel(event) {
       const opening = root.dataset.opening && root.dataset.opening !== "revealing";
       if (!horizontal.matches || event.ctrlKey || opening || event.target.closest?.(".fullscreen-menu")) {
@@ -456,7 +502,7 @@ export default function Opening() {
       const base = scrollFrame ? scrollTarget : scrollPosition;
       scrollTarget = clamp(base + delta * unit, 0, maxScrollTop());
 
-      if (motion.matches) {
+      if (motion.matches || fromTrackpad(event, sideways, delta)) {
         stopWheelScroll();
         window.scrollTo({ top: scrollTarget, behavior: "instant" });
       } else if (!scrollFrame) {
@@ -472,16 +518,54 @@ export default function Opening() {
     document.addEventListener("keydown", stopWheelScroll);
     horizontal.addEventListener("change", stopWheelScroll);
     horizontal.addEventListener("change", onResize);
-    let frame = 0;
-    let transition = 0;
-    let cleanup = 0;
+    let pending = 0;
+    let stopped = false;
+    const running = [];
 
     function stopOpening() {
-      cancelAnimationFrame(frame);
-      window.clearTimeout(transition);
-      window.clearTimeout(cleanup);
+      stopped = true;
+      running.forEach((animation) => animation.cancel());
+      window.clearTimeout(pending);
       intro.hidden = true;
       delete root.dataset.opening;
+    }
+
+    // Each step resolves only while the opening is still playing, so a skip mid-way ends the chain.
+    async function step(promise) {
+      await promise;
+      if (stopped) throw new Error("opening stopped");
+    }
+
+    function play(element, keyframes, options) {
+      const animation = element.animate(keyframes, { fill: "forwards", ...options });
+      running.push(animation);
+      return step(animation.finished);
+    }
+
+    function pause(duration) {
+      return step(new Promise((resolve) => { pending = window.setTimeout(resolve, duration); }));
+    }
+
+    async function runOpening() {
+      root.dataset.opening = "counting";
+      const [tens, ones] = number.querySelectorAll(".digit-reel");
+      const [count, final] = number.querySelectorAll(".opening-count");
+      const roll = [{ transform: "translateY(0)" }, { transform: "translateY(-9em)" }];
+      await Promise.all([
+        play(tens, roll, { duration: REEL_DURATION, delay: REEL_DELAY, easing: REEL_EASE }),
+        play(ones, roll, { duration: REEL_DURATION, delay: REEL_DELAY + REEL_STAGGER, easing: REEL_EASE }),
+      ]);
+      await pause(COUNT_HOLD);
+      // Both rows share one grid cell (style.css): "99%" leaves upwards as "100%" arrives from below.
+      play(count, [{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-100%)", opacity: 0 }], { duration: COUNT_OUT, easing: "cubic-bezier(.5, 0, .75, 0)" });
+      await play(final, [{ transform: "translateY(100%)", opacity: 0 }, { transform: "translateY(0)", opacity: 1 }], { duration: FINAL_IN, delay: FINAL_DELAY, easing: "cubic-bezier(.22, 1, .36, 1)" });
+      await pause(FINAL_HOLD);
+      root.dataset.opening = "exiting";
+      play(final, [{ opacity: 1 }, { opacity: 0 }], { duration: FINAL_OUT, easing: "ease-out" });
+      await pause(INK_FADE_START);
+      root.dataset.opening = "revealing";
+      await pause(HERO_DURATION);
+      stopOpening();
     }
 
     const profile = document.querySelector("#profile");
@@ -520,35 +604,7 @@ export default function Opening() {
       stopOpening();
     } else {
       intro.hidden = false;
-      root.dataset.opening = "counting";
-      const started = performance.now() + ENTRANCE_DURATION;
-
-      function count(now) {
-        const progress = Math.min(Math.max((now - started) / COUNT_DURATION, 0), 1);
-        const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
-        const value = 100 * eased;
-        for (const reel of number.querySelectorAll("[data-place]")) {
-          const place = Number(reel.dataset.place);
-          const base = Math.floor(value / place);
-          const carry = Math.max(0, (value % place - (place - 1)));
-          const position = place === 1 ? value : base + carry;
-          reel.firstElementChild.style.transform = `translateY(-${position}em)`;
-          reel.style.opacity = place === 1 || value >= place - 1 ? "1" : "0";
-        }
-        if (progress < 1) {
-          frame = requestAnimationFrame(count);
-        } else {
-          transition = window.setTimeout(() => {
-            root.dataset.opening = "exiting";
-            transition = window.setTimeout(() => {
-              root.dataset.opening = "revealing";
-              cleanup = window.setTimeout(stopOpening, HERO_DURATION);
-            }, EXIT_DURATION);
-          }, HOLD_DURATION);
-        }
-      }
-
-      frame = requestAnimationFrame(count);
+      runOpening().catch(() => {});
     }
 
     motion.addEventListener("change", updatePreference);
@@ -563,8 +619,8 @@ export default function Opening() {
       viewportResize.disconnect();
       workObserver.disconnect();
       workVideo.pause();
-      stage.style.removeProperty("--dive");
-      viewport.style.removeProperty("--x");
+      setDive(null);
+      setRowOffset(null);
       root.style.removeProperty("--travel");
       window.removeEventListener("scroll", onScroll);
       document.removeEventListener("click", onAnchorClick);
@@ -596,18 +652,24 @@ export default function Opening() {
     <div ref={overlay} className="opening" aria-hidden="true">
       <div className="frame opening-inner">
         <div className="opening-mask">
-        <div className="opening-count" ref={counter}>
-          {[100, 10, 1].map((place) => (
-            <span className="digit-window" data-place={place} key={place}>
-              <span className="digit-reel">
-                {Array.from({ length: 100 / place + 1 }, (_, index) => (
-                  <span className="digit" key={index}>{index % 10}</span>
-                ))}
-              </span>
-            </span>
-          ))}
-          <span className="opening-percent">%</span>
-        </div>
+          <div className="opening-stack" ref={counter}>
+            <div className="opening-count">
+              {["tens", "ones"].map((place) => (
+                <span className="digit-window" key={place}>
+                  <span className="digit-reel">
+                    {Array.from({ length: 10 }, (_, digit) => <span className="digit" key={digit}>{digit}</span>)}
+                  </span>
+                </span>
+              ))}
+              <span className="opening-percent">%</span>
+            </div>
+            <div className="opening-count">
+              {[1, 0, 0].map((digit, index) => (
+                <span className="digit-window" key={index}><span className="digit">{digit}</span></span>
+              ))}
+              <span className="opening-percent">%</span>
+            </div>
+          </div>
         </div>
         <span className="opening-caption">Web / Apps / Robotics</span>
       </div>

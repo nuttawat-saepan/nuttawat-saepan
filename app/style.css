@@ -13,6 +13,10 @@
   --ease: cubic-bezier(.22, 1, .36, 1);
 }
 
+/* motion.jsx writes --dive every scroll frame onto .work-title and .laptop only. Not inherited, so a
+   change re-styles those two elements and not the slides inside the laptop. */
+@property --dive { syntax: "<number>"; inherits: false; initial-value: 0; }
+
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 400 1rem/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
@@ -300,33 +304,37 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 
 /* Opening counter. The server renders <html data-opening="loading">, so the first paint is already
    the loader, with the rail in ink and the Home copy held back. */
-.opening { position: fixed; inset: 0; z-index: 20; color: var(--paper); background: var(--ink); pointer-events: none; clip-path: inset(0); animation: opening-failsafe 0s 9s forwards; }
+.opening { position: fixed; inset: 0; z-index: 20; color: var(--paper); background: var(--ink); pointer-events: none; animation: opening-failsafe 0s 9s forwards; }
 .opening[hidden], :root:not([data-opening]) .opening { display: none; }
 .opening-inner { min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-block: calc(4.5rem + 2rem) 5dvh; }
 .opening-mask { overflow: clip; padding-block: .02em .1em; }
-.opening-count { display: flex; align-items: center; font: 600 clamp(3.4rem, 17vw, 8rem)/1 var(--sans); letter-spacing: -.065em; }
-.digit-window { display: block; width: .6em; height: 1em; overflow-x: visible; overflow-y: clip; font-variant-numeric: tabular-nums; transition: opacity 180ms; }
-.digit-window[data-place="100"], .digit-window[data-place="10"] { opacity: 0; }
+.opening-stack { display: grid; height: 1em; font: 600 clamp(3.4rem, 17vw, 8rem)/1 var(--sans); letter-spacing: -.065em; }
+/* "99%" and "100%" share one cell; motion.jsx swaps them with a slide and fade. */
+.opening-count { grid-area: 1 / 1; display: flex; align-items: center; height: 1em; }
+.opening-count + .opening-count { opacity: 0; }
+.digit-window { display: block; width: .6em; height: 1em; overflow-x: visible; overflow-y: clip; font-variant-numeric: tabular-nums; }
 .digit-reel { display: block; will-change: transform; }
 .digit { display: block; height: 1em; line-height: 1; text-align: center; }
 .opening-percent { margin-inline-start: .05em; font-size: .65em; color: var(--red); }
 .opening-caption { align-self: end; font-size: clamp(1rem, 1.7vw, 2rem); font-weight: 500; color: var(--mute-on-ink); transition: opacity 250ms; }
 
-/* Loader timeline: count in (700 ms) → count (2.8 s, ease-in-out) → hold 450 ms
-   → digits roll up (350 ms) → ink wipes off bottom-to-top (650 ms) → Home enters in sequence. */
-[data-opening="loading"] .opening-count { transform: translateY(110%); }
+/* Loader timeline (ratios from the user's reference video): "00%" rises in (700 ms) → tens wheel
+   slides 0→9 (1.3 s, ease-in-out), ones wheel the same 250 ms later → "99%" holds 1 s → "99%" slides
+   up and fades (300 ms) as "100%" rises and fades in (400 ms, +150 ms) → hold 450 ms → "100%" fades
+   (400 ms) → 300 ms in, the ink fades off (250 ms) → the name fades up. The wheel and row moves are
+   played from motion.jsx; CSS owns the states around them. */
+[data-opening="loading"] .opening-stack { transform: translateY(110%); }
 [data-opening="loading"] .opening-caption { opacity: 0; }
-[data-opening="counting"] .opening-count { animation: count-in 700ms var(--ease) 100ms backwards; }
+[data-opening="counting"] .opening-stack { animation: count-in 700ms var(--ease) 100ms backwards; }
 [data-opening="counting"] .opening-caption { animation: fade-in 500ms ease 250ms backwards; }
-:is([data-opening="exiting"], [data-opening="revealing"]) .opening-count { transform: translateY(-110%); transition: transform 350ms cubic-bezier(.5, 0, .75, 0); }
 :is([data-opening="exiting"], [data-opening="revealing"]) .opening-caption { opacity: 0; }
-[data-opening="revealing"] .opening { clip-path: inset(0 0 100% 0); transition: clip-path 650ms cubic-bezier(.65, 0, .35, 1); }
+[data-opening="revealing"] .opening { opacity: 0; transition: opacity 250ms ease-out; }
 :root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) .site-header { --bg: var(--ink); --fg: var(--paper); --sub: var(--mute-on-ink); --rule: rgb(241 240 235 / .18); }
 
-:root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) .hero-name > span > span { transform: translateY(105%); animation: show-late 0s 9s forwards; }
+:root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) .hero-name > span > span { opacity: 0; transform: translateY(.12em); animation: show-late 0s 9s forwards; }
 :root:is([data-opening="loading"], [data-opening="counting"], [data-opening="exiting"]) :is(.role, .disciplines, .hero-scroll, .hero-bottom p) { opacity: 0; animation: show-late 0s 9s forwards; }
-[data-opening="revealing"] .hero-name > span > span { animation: name-in 750ms var(--ease) 500ms backwards; }
-[data-opening="revealing"] .hero-name > span + span > span { animation-delay: 700ms; }
+[data-opening="revealing"] .hero-name > span > span { animation: name-in 800ms var(--ease) 600ms backwards; }
+[data-opening="revealing"] .hero-name > span + span > span { animation-delay: 800ms; }
 [data-opening="revealing"] .hero-inner { animation: grid-in 800ms var(--ease) 250ms backwards; }
 [data-opening="revealing"] :is(.role, .disciplines, .hero-scroll) { animation: hero-copy-in 500ms var(--ease) 250ms backwards; }
 [data-opening="revealing"] .disciplines { animation-delay: 320ms; }
@@ -334,7 +342,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 [data-opening="revealing"] .hero-bottom p { animation: hero-copy-in 600ms var(--ease) 900ms backwards; }
 @keyframes count-in { from { transform: translateY(110%); } }
 @keyframes fade-in { from { opacity: 0; } }
-@keyframes name-in { from { transform: translateY(105%); } }
+@keyframes name-in { from { opacity: 0; transform: translateY(.12em); } }
 @keyframes hero-copy-in { from { opacity: 0; transform: translateY(.6rem); } }
 @keyframes grid-in { from { background-size: 1px 0%, 1px 0%; } }
 @keyframes show-late { to { opacity: 1; transform: none; } }
@@ -416,7 +424,9 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
     overflow: clip;
   }
   .portfolio-viewport > main { display: flex; flex: 0 0 auto; }
-  .portfolio-viewport > :is(main, footer) { transform: translate3d(var(--x, 0px), 0, 0); will-change: transform; }
+  /* motion.jsx sets transform: translate3d() on these directly; an inherited --x on the viewport
+     made every panel re-style on every scroll frame. */
+  .portfolio-viewport > :is(main, footer) { will-change: transform; }
   .portfolio-viewport :is(section, footer) {
     flex: 0 0 auto;
     width: var(--panel);
@@ -663,7 +673,7 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .opening { inset-inline-start: var(--rail); }
   .opening-inner { padding: 4.2dvh var(--chapter-pad) 5dvh; }
   .opening-mask { margin-block-start: -.09em; font-size: var(--name-size); }
-  .opening-count { font-size: 1em; letter-spacing: -.065em; }
+  .opening-stack { font-size: 1em; letter-spacing: -.065em; }
 }
 
 @media not all and (min-width: 900px) and (min-height: 600px) {
