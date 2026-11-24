@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Opening from "./motion";
 import Sidebar from "./sidebar";
-import { Icon, ProjectScreen, areas, caseId, projects } from "./projects";
-import OneDPreview from "./preview";
+import Link from "next/link";
+import SelectedWork from "./selected-work";
+import { areas, projectSlug } from "./projects";
 
 const pad = (value) => String(value).padStart(2, "0");
-const total = pad(projects.length);
 
 export default function Home() {
   return (
@@ -42,14 +42,31 @@ export default function Home() {
               </figure>
               <div className="profile-foot">
                 <p className="portrait-caption">Software Engineer<br />Web / Apps / Robotics</p>
-                <a className="profile-link" href="#projects">View projects <span aria-hidden="true">→</span></a>
+                <a className="profile-link" href="#work">View projects <span aria-hidden="true">→</span></a>
               </div>
             </div>
           </section>
 
+          {/* THE WORK: the row holds still while a film grows from nothing between the two words,
+              pushes them off the sides and fills the screen; then the row carries on (motion.jsx). */}
+          <section className="the-work" id="work" data-theme="paper" aria-label="The work">
+            <div className="tw-stage">
+              <p className="tw-words" aria-hidden="true"><span>The</span><span>Work</span></p>
+              <div className="tw-film">
+                {/* the-work.mp4 is the user's generated montage; until it exists the old montage plays */}
+                <video className="tw-video" muted loop playsInline preload="none" poster="/assets/selected-projects.webp" aria-hidden="true">
+                  <source src="/assets/the-work.mp4" type="video/mp4" />
+                  <source src="/assets/selected-projects.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+          </section>
+
+          <SelectedWork />
+
           <section className="what" id="what-i-do" data-theme="paper" aria-labelledby="what-title">
             <div className="what-intro">
-              <p className="section-label" aria-hidden="true"><span>(02)</span> What I do</p>
+              <p className="section-label" aria-hidden="true"><span>(03)</span> What I do</p>
               <h2 id="what-title" className="what-title">What I do<i className="dot" aria-hidden="true">.</i></h2>
               <div className="what-lead">
                 <p className="what-kicker">Web / Apps / Robotics</p>
@@ -71,7 +88,7 @@ export default function Home() {
                       <h4 className="what-sub">Seen in</h4>
                       <p className="what-seen">
                         {area.projects.map((project) => (
-                          <a key={project.name} href={`#${caseId(project.name)}`}>{project.name} <span aria-hidden="true">→</span></a>
+                          <Link key={project.name} href={`/projects/${projectSlug(project.name)}`}>{project.name} <span aria-hidden="true">→</span></Link>
                         ))}
                       </p>
                     </div>
@@ -81,125 +98,6 @@ export default function Home() {
             </ol>
           </section>
 
-          <section className="projects" id="projects" data-theme="ink" aria-labelledby="projects-title">
-            <div className="work-track" style={{ "--cases": projects.length }}>
-              <div className="work-stage" data-mode="intro">
-                <p className="section-label work-label" aria-hidden="true">(03) Selected projects — {total}</p>
-                <h2 className="work-title" id="projects-title" aria-label="Selected projects">
-                  <span>Selected</span><span>Projects</span>
-                </h2>
-
-                <div className="laptop">
-                  <div className="screen-modes" role="group" aria-label="Laptop screen" hidden>
-                    <span className="screen-modes-pill" aria-hidden="true" />
-                    <button type="button" data-screen-mode="inside" aria-pressed="true">{"What's inside"}</button>
-                    <button type="button" data-screen-mode="app" aria-pressed="false"><span className="play-glyph" aria-hidden="true" />Preview app</button>
-                  </div>
-                  <div className="laptop-lid">
-                    <div className="laptop-screen">
-                      <video className="screen-intro" muted loop playsInline preload="none" poster="/assets/selected-projects.webp" aria-hidden="true">
-                        <source src="/assets/selected-projects.mp4" type="video/mp4" />
-                      </video>
-                      {projects.map((project, index) => (
-                        <div key={project.name} className="screen-case" data-case={index} data-screen={project.screen ?? "pending"} data-demo={project.concepts[0]?.demo} aria-hidden="true">
-                          <ProjectScreen project={project} index={index} />
-                          {project.screen !== "slides" && project.concepts.length > 0 && <span className="screen-chip">{project.concepts[0].title}</span>}
-                        </div>
-                      ))}
-                      {projects.map((project, index) => project.preview && (
-                        <div key={project.name} className="app-preview" data-preview-for={index} role="region" aria-label={`${project.name} example app preview`} hidden>
-                          <button type="button" className="app-close" aria-label="Close preview">✕</button>
-                          <OneDPreview />
-                        </div>
-                      ))}
-                      <span className="screen-flash" aria-hidden="true" />
-                    </div>
-                  </div>
-                  <div className="laptop-base" aria-hidden="true" />
-                </div>
-
-                <ol className="case-list">
-                  {projects.map((project, index) => (
-                    <li key={project.name} id={caseId(project.name)} className="case" data-case={index} data-preview={project.preview ? index : undefined}>
-                      <article className="ticket">
-                        <span className="punch" aria-hidden="true" />
-                        <h3 className={project.name.length > 16 ? "is-long" : undefined}>{project.name}</h3>
-                        <dl className="ticket-rows">
-                          <div><dt>Scope</dt><dd>{project.scope}</dd></div>
-                          <div><dt>Stack</dt><dd>{project.stack}</dd></div>
-                          <div><dt>Period</dt><dd>{project.period}</dd></div>
-                        </dl>
-                      </article>
-                      <div className="case-copy">
-                        <p className="case-summary">{project.summary}</p>
-                        {project.preview && (
-                          <button type="button" className="preview-toggle" data-preview={index} aria-pressed="false">
-                            <span className="when-closed">Preview example app</span>
-                            <span className="when-open">Close preview</span>
-                          </button>
-                        )}
-                        <p className="concept-head">
-                          <span className="concept-label">{"// What's inside"}</span>
-                          <span className="concept-explored">Explored <b>1</b> / {project.concepts.length}</span>
-                        </p>
-                        {/* Accordion: each concept's detail opens right under its row */}
-                        <ol className="concept-list" aria-label={`${project.name} concepts`}>
-                          {project.concepts.map((concept, order) => {
-                            const detailId = `${caseId(project.name)}-concept-${order + 1}`;
-                            return (
-                              <li key={concept.title}>
-                                <button type="button" className="concept" data-concept={order} data-demo={concept.demo} aria-pressed={order === 0} aria-expanded={order === 0} aria-controls={detailId} data-seen={order === 0 || undefined}>
-                                  <span className="concept-icon" aria-hidden="true"><Icon name={concept.icon} /></span>
-                                  <span className="concept-title">{concept.title}</span>
-                                  <span className="concept-tag">{concept.tag}</span>
-                                </button>
-                                <div className="concept-detail" id={detailId} data-concept-detail={order} hidden={order !== 0} aria-live="polite">
-                                  <p className="concept-index"><span className="concept-just">Just used · </span>Concept {pad(order + 1)} / {pad(project.concepts.length)}</p>
-                                  <p>{concept.text}</p>
-                                  {concept.learn && <p className="concept-learn"><span>Learning</span>{concept.learn}</p>}
-                                  {concept.measured && <p className="concept-learn"><span>Measured</span>{concept.measured}</p>}
-                                </div>
-                              </li>
-                            );
-                          })}
-                        </ol>
-                        {project.concepts.length > 4 && (
-                          <button type="button" className="concept-more" aria-expanded="false">
-                            <span className="when-closed">+ {project.concepts.length - 4} more</span>
-                            <span className="when-open">Show less</span>
-                          </button>
-                        )}
-                        <p className="case-count" aria-hidden="true">{pad(index + 1)} / {total}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-
-                <div className="case-nav">
-                  <button type="button" className="case-button" data-step="-1">
-                    <span className="case-circle" aria-hidden="true">←</span> previous case
-                  </button>
-                  <button type="button" className="case-button is-next" data-step="1">
-                    next case <span className="case-circle" aria-hidden="true">→</span>
-                  </button>
-                </div>
-
-                {/* Phones: tapping the sticky screen opens the current slide here, readable and pannable */}
-                <dialog className="slide-viewer" aria-label="Concept diagram">
-                  <div className="viewer-head">
-                    <p className="viewer-title" aria-live="polite" />
-                    <button type="button" className="viewer-close" aria-label="Close diagram">✕</button>
-                  </div>
-                  <div className="viewer-pan"><div className="viewer-size"><div className="viewer-stage" /></div></div>
-                  <div className="viewer-foot">
-                    <button type="button" className="viewer-step" data-viewer-step="-1" aria-label="Previous concept">←</button>
-                    <p className="viewer-hint">ปัดซ้ายขวาเพื่อดูทั้งแผนภาพ · ปัดลงเพื่อปิด</p>
-                    <button type="button" className="viewer-step" data-viewer-step="1" aria-label="Next concept">→</button>
-                  </div>
-                </dialog>
-              </div>
-            </div>
-          </section>
         </main>
 
         <footer className="contact" id="contact" data-theme="red" aria-labelledby="contact-title">

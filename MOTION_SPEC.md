@@ -1,3 +1,19 @@
+# Home follows the reference: THE WORK → Chapter II, project pages — 24 November 2026
+
+User decision: copy khanhnguyen.design's structure; the case study / example app move to separate pages, as the reference has `/works/<slug>`. Font: a modern sans, not the reference's serif. Video: the user generates it (prompt given in chat) as `public/assets/the-work.mp4`; until then the old montage plays as a fallback `<source>`.
+
+Observed on the reference (1440×900): THE WORK is one panel with "THE" and "WORK" in large type and a 16:9 film between them. The row holds still for 900 px of scroll while the film grows linearly from 0 to about 1615×908 (just past full screen), pushing the words off the sides; the row then carries on and the full-screen film slides out left as Chapter II slides in. Chapter II (Related work): a big list of project names on the right; hovering lights one (↗, the rest grey) and shows its thumbnail; each links to `/works/<slug>`; "View all work →" links to `/works`. Project page: back link, big title, overview, details table, next project, large images. `/works`: numbered cards with category — year.
+
+Implemented:
+- **Order and themes**: Home (paper) → (01) Quick intro (ink) → THE WORK (paper) → (02) Selected projects (ink) → (03) What I do (paper) → (04) Contact (red). The menu follows: Home, Profile, Projects, What I do, Contact. The in-page cases, laptop dive and screen tabs are gone from home.
+- **Font**: Geist (headings and Latin text); Thai stays IBM Plex Sans Thai.
+- **THE WORK** (desktop): the row holds still for one panel of scroll (`--dive-len: 1`); the film scales from 0 to 110% of the larger of the panel width and the screen height at 16:9, linearly with that scroll; "The" and "Work" stay pinned to its edges, so they are pushed off the sides. `--dive` is written only onto the film and the two words. Phones: the words sit above a 16:9 film, no scroll-driven growth. Reduced motion: no hold, the film shows full size.
+- **Chapter II** (`selected-work.jsx`): left, the hovered project's summary and stack above a laptop showing its first slide (cross-fade 350 ms), and a footnote; right, "Hover to preview · Click to explore", "Related work" and the numbered list. The lit row turns from grey to white with ↗, and its meta (scope — year, "What's inside (n) →") slides open (grid row 0fr→1fr, 450 ms). Every name links to `/projects/<slug>`; "View all work →" links to `/projects`. Phones: list only, every row's meta open, footnote last.
+- **Project pages** (`/projects/<slug>`, `/projects`): see the 23–24 November build; What I do's "Seen in" links now go there.
+- **Loader once per visit**: motion.jsx sets a sessionStorage flag; an inline script in the layout drops `data-opening` before first paint on a return visit or on any page other than home, so coming back from a project page doesn't replay the loader.
+
+---
+
 # Slot-machine loader — 23 November 2026
 
 User decision: concept A ("Slot machine") from three merges of the old portfolio-2026 loader (`LoadingV3`) with the current counter, with each wheel sliding in one continuous ease-in-out move instead of stepping digit by digit. The user then supplied a reference recording (`C:\Users\nutta\Videos\2026-11-23 23-40-10.mp4`, 5.6 s, 1280×720, 30 fps) and asked to match its speed ratios and transitions only, not its content. This supersedes the 0→100 real count, the ink wipe and the name's mask rise in the 21 November entry; the ink overlay, caption, rail and the rest of the Home entrance stay as specified there.

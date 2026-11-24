@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500&display=swap");
 
 :root {
   --paper: #f1f0eb;
@@ -7,14 +7,16 @@
   --mute-on-ink: #9a9a92;
   --red: #ff3b1f;
   --card: #ffffff;
-  --sans: "Inter Tight", "IBM Plex Sans Thai", system-ui, sans-serif;
-  --thai: "IBM Plex Sans Thai", "Inter Tight", system-ui, sans-serif;
+  /* Geist for Latin text (user decision, 24 Nov: modern sans, not the reference's serif); Thai falls
+     through to IBM Plex Sans Thai. */
+  --sans: "Geist", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --thai: "IBM Plex Sans Thai", "Geist", system-ui, sans-serif;
   --gutter: clamp(1.25rem, 5.2vw, 6.25rem);
   --ease: cubic-bezier(.22, 1, .36, 1);
 }
 
-/* motion.jsx writes --dive every scroll frame onto .work-title and .laptop only. Not inherited, so a
-   change re-styles those two elements and not the slides inside the laptop. */
+/* motion.jsx writes --dive every scroll frame onto the THE WORK film and its two words only. Not
+   inherited, so a change re-styles those three elements and nothing inside them. */
 @property --dive { syntax: "<number>"; inherits: false; initial-value: 0; }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -66,19 +68,52 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .portrait img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; object-position: center 40%; filter: grayscale(1); background: #d9d8d2; }
 .profile-link { justify-self: start; font-size: clamp(1.1rem, 2.6vw, 1.6rem); letter-spacing: -.02em; }
 
-/* Projects — stacked on small screens */
-.projects { padding-block: 3rem 4rem; }
-.work-stage { padding-inline: var(--gutter); }
-.work-label { margin-block-end: 1rem; }
-.work-title { display: flex; flex-wrap: wrap; gap: 0 .25em; font: 600 clamp(2.4rem, 10vw, 4.5rem)/.9 var(--sans); letter-spacing: -.06em; }
+/* THE WORK — on phones the two words sit above the film, no scroll-driven growth */
+.the-work { padding-block: 3rem; overflow: clip; }
+.tw-stage { display: grid; gap: 1.2rem; padding-inline: var(--gutter); }
+.tw-words { display: flex; justify-content: space-between; font: 600 clamp(3.2rem, 17vw, 6rem)/.9 var(--sans); letter-spacing: -.06em; }
+.tw-film { aspect-ratio: 16 / 9; overflow: hidden; background: #d9d9d9; }
+.tw-video { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Chapter II — Selected projects: the list (phones: list only, every row open) */
+.wl { display: grid; gap: 2rem; padding: 3rem var(--gutter) 3.5rem; }
+/* phones: the left column dissolves so its footnote can follow the list */
+.wl-left { display: contents; }
+.wl-note { order: 2; }
+.wl-preview { display: none; }
+.wl-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 1.5rem; }
+.wl-caption p:first-child { max-width: 30em; font: 400 .95rem/1.55 var(--thai); }
+.wl-stack { flex: 0 1 auto; max-width: 42%; font: 500 .8rem/1.4 var(--sans); color: var(--sub); text-align: right; }
+.wl-screen { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease; }
+.wl-screen[data-on] { opacity: 1; }
+.wl .sl-pager { display: none; }
+.wl-note { font: 500 .7rem/1.45 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--sub); }
+.wl-hint, .wl-label { font: 600 .72rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
+.wl-hint { display: none; }
+.wl-label { margin-block-end: .6rem; }
+.wl-list { margin: 0; padding: 0; list-style: none; }
+.wl-list > li { border-block-end: 1px solid var(--rule); }
+.wl-item { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr) auto; align-items: baseline; gap: .5rem; padding-block: .55rem .4rem; color: var(--fg); transition: color .3s ease; }
+.wl-num { font: 500 .8rem/1 var(--sans); color: var(--sub); }
+.wl-name { font: 500 clamp(2.2rem, 10vw, 3.4rem)/1.05 var(--sans); letter-spacing: -.05em; }
+.wl-arrow { font-size: 1.6rem; line-height: 1; opacity: 0; transform: translate(-.3em, .3em); transition: opacity .3s ease, transform .4s var(--ease); }
+/* the open row's meta: scope — year and "What's inside" (a 0fr → 1fr row, so it slides open) */
+.wl-meta { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .45s var(--ease); }
+.wl-meta > div { min-height: 0; overflow: hidden; }
+.wl-meta-in { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem 1rem; padding: 0 0 1rem 3.1rem; }
+.wl-period { font: 500 .85rem/1.3 var(--sans); color: var(--sub); }
+.wl-inside { display: inline-flex; align-items: center; gap: .45rem; min-height: 2.75rem; padding: .55rem 1.05rem; border: 1.5px solid var(--fg); border-radius: 2rem; font: 600 .82rem/1 var(--sans); white-space: nowrap; transition: background-color .2s, color .2s; }
+.wl-inside:hover { background: var(--fg); color: var(--bg); }
+.wl-all { justify-self: end; display: inline-flex; align-items: baseline; gap: .55em; margin-block-start: 1.6rem; padding-block-end: .2rem; border-block-end: 1px solid currentColor; font: 500 clamp(1.2rem, 4vw, 1.6rem)/1 var(--sans); letter-spacing: -.03em; }
+.wl-all span, .wl-inside span { transition: transform .25s var(--ease); }
+.wl-all:hover span, .wl-inside:hover span { transform: translateX(.25em); }
+
+/* Laptop frame (Chapter II preview and the project pages) */
 .laptop { width: 86%; max-width: 36rem; margin: 2rem auto 0; }
 .laptop-lid { padding: 3.2%; background: #1a1a1a; border: 2px solid #3a3a38; border-radius: 14px 14px 4px 4px; }
 .laptop-screen { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 3px; background: #000; }
 .laptop-base { width: 116%; margin-inline-start: -8%; aspect-ratio: 34 / 1; background: #cfcfca; border-radius: 0 0 12px 12px; }
-.screen-intro { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .4s; }
-.screen-case { display: none; }
-.screen-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
-.screen-modes { display: none; }
+.play-glyph { width: 0; height: 0; border-block: .3rem solid transparent; border-inline-start: .48rem solid currentColor; }
 
 /* Slides: node graphs drawn on a fixed 1200 × 750 stage, scaled to the screen by motion.jsx
    (--stage-scale). The selected concept sets --slide and the track glides to it. */
@@ -143,25 +178,6 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 @keyframes sl-spin { to { transform: rotate(360deg); } }
 
 
-.case-list { list-style: none; padding: 0; margin-block-start: 2.5rem; display: grid; gap: 2.5rem; }
-.case { display: grid; gap: 1.25rem; scroll-margin-top: calc(4.5rem + 1px); }
-.ticket { position: relative; background: var(--card); color: var(--ink); padding: 1.5rem 1.5rem 1rem 2.25rem; }
-.ticket::before, .ticket::after, .punch::before, .punch::after { content: ""; position: absolute; width: .8rem; height: .8rem; border-radius: 50%; background: var(--ink); }
-.ticket::before { top: .7rem; left: .7rem; }
-.ticket::after { bottom: .7rem; left: .7rem; }
-.punch::before { top: .7rem; right: .7rem; background: var(--red); }
-.punch::after { bottom: .7rem; right: .7rem; }
-.ticket h3 { font: 600 clamp(1.8rem, 7vw, 2.6rem)/1 var(--sans); letter-spacing: -.05em; overflow-wrap: anywhere; }
-.ticket-rows { margin-block-start: .9rem; }
-.ticket-rows div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-block: .45rem .35rem; border-block-end: 1px solid rgb(14 14 14 / .2); font-size: .8rem; font-weight: 500; }
-.ticket-rows dt { color: var(--mute); }
-.ticket-rows dd { text-align: right; }
-.case-copy { font: 400 .95rem/1.65 var(--thai); color: var(--sub); }
-.case-summary { margin-block-end: 1.1rem; color: var(--fg); }
-.concept-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-block-end: .55rem; border-block-end: 1px solid var(--rule); }
-.concept-label, .concept-explored { font: 600 .72rem/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
-.concept-explored { color: var(--fg); white-space: nowrap; }
-.concept-explored b { font-weight: 600; color: var(--red); }
 /* Concepts read as a labelled list: number, title and skill tag, all visible without a click */
 .concept-list { list-style: none; margin: 0; padding: 0; }
 .concept-list > li { border-block-end: 1px solid var(--rule); }
@@ -192,24 +208,6 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
 .concept[aria-pressed="true"] .concept-icon { border-color: var(--red); background: var(--red); color: var(--ink); }
 .concept[aria-pressed="true"] .concept-tag { color: var(--red); }
 .concept:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-.concept-detail { padding: .1rem 0 .95rem calc(2.1rem + .75rem); }
-.concept-detail > p + p { margin-block-start: .35rem; }
-.concept-just { display: none; }
-[data-used] .concept-just { display: inline; }
-.concept-index { margin-block-end: .3rem; font: 600 .66rem/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
-.concept-more { display: none; margin-block-start: .4rem; padding: .7rem 0; border: 0; background: none; color: var(--fg); font: 600 .8rem/1 var(--sans); letter-spacing: .04em; cursor: pointer; }
-.concept-more .when-open, .concept-more[aria-expanded="true"] .when-closed { display: none; }
-.concept-more[aria-expanded="true"] .when-open { display: inline; }
-.concept-learn { margin-block-start: .6rem; color: var(--fg); }
-.concept-learn span { margin-inline-end: .6em; font: 600 .68rem/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--red); }
-.preview-toggle { display: inline-flex; align-items: center; gap: .6rem; margin-block-end: 1.1rem; padding: .55rem 1rem; border: 1.5px solid var(--paper); border-radius: 2rem; background: none; color: var(--paper); font: 600 .8rem/1 var(--sans); cursor: pointer; transition: background-color .2s, border-color .2s, color .2s; }
-.preview-toggle::before { content: ""; width: 0; height: 0; border-block: .32rem solid transparent; border-inline-start: .5rem solid currentColor; }
-.preview-toggle:hover { background: var(--paper); color: var(--ink); }
-.preview-toggle[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: var(--ink); }
-.preview-toggle[aria-pressed="true"]::before { width: .55rem; height: .55rem; border: 0; background: currentColor; }
-.preview-toggle .when-open, .preview-toggle[aria-pressed="true"] .when-closed { display: none; }
-.preview-toggle[aria-pressed="true"] .when-open { display: inline; }
-
 /* Example app inside the laptop screen */
 .app-preview { position: absolute; inset: 0; z-index: 3; background: #0b0b0b; container-type: size; }
 .app-preview[hidden] { display: none; }
@@ -269,9 +267,6 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .app-side-label, .app-log { font-size: max(11px, 3cqw); }
   .app-log { padding: 1.4cqh 3cqw; }
 }
-
-.case-count { margin-block-start: 1rem; font: 600 .75rem/1 var(--sans); letter-spacing: .14em; color: var(--red); }
-.case-nav { display: none; }
 
 /* What I do: an intro, then one column per area (Web / Apps / Robotics). Stacked on small screens. */
 .what { padding-block: 3.5rem; }
@@ -503,152 +498,34 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .profile-foot { grid-column: 1; grid-row: 3; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
   .profile-link { font-size: clamp(1rem, 1.35vw, 1.6rem); }
 
-  /* Projects: the row holds still here while scroll pushes into the laptop (--dive-len viewports),
-     then steps through the cases (--case-len each). motion.jsx reads both lengths. */
-  .portfolio-viewport #projects { overflow: visible; padding: 0; }
-  .work-track {
-    --dive-len: 1;
-    --case-len: .45;
-    position: relative;
-    width: var(--panel);
-    height: 100%;
-  }
-  .work-stage {
-    --lap-w: min(calc(var(--panel) * .48), 96dvh);
-    position: relative;
-    width: var(--panel);
-    height: 100%;
-    overflow: hidden;
-    padding: 0;
-  }
-  .work-label { position: absolute; left: var(--chapter-pad); top: 4.2dvh; margin: 0; }
-  /* The laptop grows from nothing between the words and pushes them apart, like the reference's
-     "THE WORK" grid. Each word is pinned to the laptop's edge; both fade only near the end of the dive. */
-  .work-title {
-    --half: calc(var(--lap-w) * 1.16 * var(--dive, 0) / 2);
-    --dx: calc(var(--panel) * .08 * var(--dive, 0));
-    position: absolute;
-    inset: 0;
-    display: block;
-    font-size: clamp(2.6rem, 6.4vw, 8.5rem);
-    opacity: clamp(0, calc((1 - var(--dive, 0)) * 3.3), 1);
-    pointer-events: none;
-  }
-  .work-title span { position: absolute; top: 50%; line-height: 1; white-space: nowrap; }
-  .work-title span:first-child { right: 50%; transform: translate(calc(var(--dx) - var(--half) - .16em), -50%); }
-  .work-title span:last-child { left: 50%; transform: translate(calc(var(--dx) + var(--half) + .16em), -50%); }
+  /* THE WORK: the row holds still for --dive-len panels of scroll (motion.jsx) while the film scales
+     from 0 to just past full screen; each word stays pinned to the film's edge, so the film pushes
+     them apart and off the sides, as on the reference. */
+  .portfolio-viewport #work { --dive-len: 1; --cover-w: max(calc(var(--panel) * 1.1), calc(100dvh * 1.1 * 16 / 9)); position: relative; padding: 0; overflow: clip; }
+  #work .tw-stage { position: absolute; inset: 0; display: block; padding: 0; }
+  .tw-words { position: absolute; inset: 0; display: block; font-size: clamp(4.5rem, 11vw, 13rem); pointer-events: none; }
+  .tw-words span { --half: calc(var(--cover-w) * var(--dive) / 2); position: absolute; top: 50%; line-height: .9; white-space: nowrap; }
+  .tw-words span:first-child { right: 50%; transform: translate(calc(-1 * var(--half) - .12em), -50%); }
+  .tw-words span:last-child { left: 50%; transform: translate(calc(var(--half) + .12em), -50%); }
+  .tw-film { position: absolute; left: 50%; top: 50%; width: var(--cover-w); transform: translate(-50%, -50%) scale(var(--dive)); will-change: transform; }
 
-  .laptop {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: var(--lap-w);
-    max-width: none;
-    margin: 0;
-    transform:
-      translate(-50%, -50%)
-      translate(calc(var(--panel) * .08 * var(--dive, 0)), calc(3dvh * var(--dive, 0)))
-      scale(var(--dive, 0));
-    will-change: transform;
-  }
-  .laptop-lid { border-width: 3px; border-radius: 18px 18px 6px 6px; }
-  /* narrower than on phones so the base clears the case column on the left */
-  .laptop-base { width: 108%; margin-inline-start: -4%; border-radius: 0 0 18px 18px; }
-  .screen-case {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 6% 7%;
-    color: var(--paper);
-    background-color: #121212;
-    background-image:
-      linear-gradient(rgb(241 240 235 / .06) 1px, transparent 1px),
-      linear-gradient(90deg, rgb(241 240 235 / .06) 1px, transparent 1px);
-    background-size: calc(var(--lap-w) / 16) calc(var(--lap-w) / 16);
-    opacity: 0;
-    transition: opacity .35s;
-  }
-  .screen-index { font: 600 .85rem/1 var(--sans); letter-spacing: .12em; color: var(--red); }
-  .screen-name { font: 600 calc(var(--lap-w) * .085)/.92 var(--sans); letter-spacing: -.055em; }
-  .screen-note { font-size: .8rem; color: var(--mute-on-ink); }
-  .screen-case:not([data-screen="pending"]) { padding: 0; }
-  .screen-chip {
-    position: absolute;
-    left: 50%;
-    top: 5%;
-    z-index: 2;
-    padding: .45em .8em;
-    background: var(--red);
-    color: var(--ink);
-    font: 600 calc(var(--lap-w) * .02)/1 var(--sans);
-    white-space: nowrap;
-    transform: translateX(-50%);
-  }
-
-
-  /* Tabs above the laptop for cases with an example app: the slides or the app. On mobile the
-     case keeps its own Preview button instead. */
-  .preview-toggle { display: none; }
-  .screen-modes { position: absolute; left: 0; bottom: calc(100% + .8rem); z-index: 2; display: inline-flex; padding: 3px; border: 1px solid var(--rule); border-radius: 2rem; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
-  .screen-modes[hidden] { display: none; }
-  [data-mode="case"] .screen-modes { opacity: 1; visibility: visible; }
-  .screen-modes button { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: .45rem; padding: .5rem 1rem; border: 0; border-radius: 2rem; background: none; color: var(--sub); font: 600 .8rem/1 var(--sans); cursor: pointer; transition: color .3s; }
-  .screen-modes button[aria-pressed="true"] { color: var(--ink); }
-  .screen-modes button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
-  .screen-modes-pill { position: absolute; top: 3px; bottom: 3px; left: 3px; border-radius: 2rem; background: var(--red); transition: transform .45s var(--ease), width .45s var(--ease); }
-  .play-glyph { width: 0; height: 0; border-block: .3rem solid transparent; border-inline-start: .48rem solid currentColor; }
-
-  [data-mode="case"] .screen-intro { opacity: 0; }
-  [data-mode="case"] .screen-case[data-active] { opacity: 1; }
-
-  .case-list { display: block; margin: 0; }
-  /* above the laptop, so the case column is never covered by the laptop's base */
-  .case { position: absolute; inset: 0; z-index: 2; display: block; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
-  [data-mode="case"] .case[data-active] { opacity: 1; }
-  [data-mode="case"] .case[data-active] :is(.ticket, .case-copy) { pointer-events: auto; }
-  .ticket { position: absolute; right: calc(var(--chapter-pad) * .7); top: 7dvh; width: clamp(18rem, 25vw, 26rem); padding: 1.7rem 1.7rem 1.1rem 2.6rem; transform-origin: 50% 0; }
-  .ticket h3 { font-size: clamp(1.8rem, 2.9vw, 3.2rem); }
-  .ticket h3.is-long { font-size: clamp(1.35rem, 1.9vw, 2.1rem); }
-  .case-copy {
-    position: absolute;
-    --copy-top: 13dvh;
-    left: calc(var(--chapter-pad) - .6rem);
-    top: var(--copy-top);
-    width: calc(var(--panel) * .58 - var(--lap-w) / 2 - var(--chapter-pad) - 1.3rem);
-    padding: .6rem;
-    /* down to just above the previous / next case buttons */
-    max-height: calc(100dvh - var(--copy-top) - 5dvh - 4.4rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    font-size: clamp(.9rem, 1.05vw, 1.05rem);
-  }
-  /* Desktop rows are mouse targets inside a fixed-height column: tighter than on phones */
-  .concept { min-height: 2.55rem; padding-block: .3rem; }
-  .concept-icon { width: 1.95rem; height: 1.95rem; }
-  .concept-detail { padding-block-end: .75rem; }
-
-  @media (max-width: 1279px), (max-height: 819px) {
-    .case-copy { --copy-top: 11dvh; }
-    .case-summary { margin-block-end: .8rem; font-size: .88em; }
-    .concept { min-height: 2.35rem; padding-block: .25rem; font-size: .95em; }
-    .concept-icon { width: 1.8rem; height: 1.8rem; }
-    .concept-detail { padding-block-end: .65rem; }
-    /* not enough height for seven rows plus a detail: same "+N more" as on phones */
-    .concept-more { display: inline-block; padding-block: .5rem; }
-    .concept-list:not([data-expanded]) > li:nth-child(n + 5):not(:has(.concept[aria-pressed="true"])) { display: none; }
-  }
-
-  .case-nav { position: absolute; inset: auto calc(var(--chapter-pad) * .7) 5dvh var(--chapter-pad); display: flex; justify-content: space-between; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s, visibility .3s; }
-  .case-nav .case-button { pointer-events: auto; }
-  [data-mode="case"] .case-nav { opacity: 1; visibility: visible; }
-  .case-button { display: inline-flex; align-items: center; gap: .7rem; padding: 0; border: 0; background: none; color: inherit; font: 500 .9rem/1.1 var(--sans); cursor: pointer; }
-  .case-circle { width: 2.9rem; height: 2.9rem; display: grid; place-items: center; border: 1.5px solid currentColor; border-radius: 50%; font-size: 1.1rem; transition: transform .25s var(--ease), background-color .25s, border-color .25s; }
-  .case-button:hover .case-circle { transform: scale(1.08); }
-  .is-next .case-circle { background: var(--paper); border-color: var(--paper); color: var(--ink); }
-  .is-next:hover .case-circle { background: var(--red); border-color: var(--red); }
+  /* Chapter II: preview on the left, the list on the right */
+  .portfolio-viewport #projects { padding: 0; }
+  .wl { height: 100%; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 6rem); padding: 4.2dvh var(--chapter-pad) 5dvh; }
+  .wl-left { display: grid; gap: 1.2rem; height: 100%; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .wl-preview { display: grid; align-content: end; gap: 1.1rem; }
+  .wl .laptop { width: 100%; max-width: min(100%, 78dvh); margin: 0; }
+  .wl .laptop-lid { border-width: 3px; border-radius: 18px 18px 6px 6px; }
+  .wl .laptop-base { width: 108%; margin-inline-start: -4%; border-radius: 0 0 18px 18px; }
+  .wl-right { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .wl-hint { display: block; margin-block-end: 2.2dvh; }
+  .wl-item { color: var(--sub); }
+  .wl-name { font-size: clamp(2.6rem, min(5.4vw, 9dvh), 6.5rem); }
+  .wl-list > li[data-on] > .wl-item { color: var(--fg); }
+  .wl-list > li[data-on] .wl-arrow { opacity: 1; transform: none; }
+  .wl-meta { grid-template-rows: 0fr; }
+  .wl-list > li[data-on] > .wl-meta { grid-template-rows: 1fr; }
+  .wl-all { margin-block-start: auto; }
 
   /* What I do: one wide chapter in the row. A half-panel intro, then three columns of .29 panel */
   .portfolio-viewport #what-i-do { width: auto; display: flex; padding: 0; overflow: clip; }
@@ -690,32 +567,10 @@ nav a:hover { text-decoration: underline; text-underline-offset: .2em; }
   .what-col { flex: 0 0 min(84%, 24rem); padding: 1.6rem var(--gutter) 1.8rem; border-block-start: 0; border-inline-end: 1px solid var(--rule); scroll-snap-align: start; }
   .what-seen a { padding-block: .6rem .2rem; }
 
-  /* Projects: the laptop sticks under the top bar and shows the case being read */
-  .work-stage { position: relative; }
-  .laptop { position: sticky; top: var(--bar-h); z-index: 5; width: min(72%, 30rem); margin: 1.5rem auto 0; padding-block: .8rem 1rem; }
-  .laptop::before { content: ""; position: absolute; inset: 0 calc(50% - 50vw); z-index: -1; background: var(--ink); border-block-end: 1px solid var(--rule); }
-  .screen-case { position: absolute; inset: 0; display: block; opacity: 0; transition: opacity .35s; }
-  .screen-intro { transition: opacity .35s; }
-  [data-case-shown] .screen-intro { opacity: 0; }
-  [data-case-shown] .screen-case[data-active] { opacity: 1; }
+  /* Project pages: the sticky laptop's tap-to-zoom affordance */
   .laptop .sl-pager { display: none; }
   [data-case-shown] .laptop-screen { cursor: zoom-in; }
   [data-case-shown] .laptop-screen::after { content: "⤢ Tap to zoom"; position: absolute; right: .35rem; bottom: .3rem; z-index: 2; padding: .2rem .45rem; border-radius: 1rem; background: rgb(14 14 14 / .8); color: var(--paper); font: 600 .62rem/1 var(--sans); letter-spacing: .04em; pointer-events: none; }
-
-  /* Compact ticket: name, then scope · stack · period on one wrapped line */
-  .case-list { margin-block-start: 1.5rem; gap: 3rem; }
-  .ticket { padding: .95rem 1.1rem .85rem 2rem; }
-  .ticket::after, .punch::after { display: none; }
-  .ticket h3 { font-size: clamp(1.5rem, 7vw, 2rem); }
-  .ticket-rows { display: flex; flex-wrap: wrap; gap: .1rem .45rem; margin-block-start: .45rem; }
-  .ticket-rows div { display: contents; }
-  .ticket-rows dt { display: none; }
-  .ticket-rows dd { color: var(--mute); font-size: .74rem; font-weight: 500; text-align: start; }
-  .ticket-rows div + div dd::before { content: "·"; margin-inline-end: .45rem; }
-
-  /* Concepts: first four rows, the rest behind "+N more" (the open one always shows) */
-  .concept-more { display: inline-block; }
-  .concept-list:not([data-expanded]) > li:nth-child(n + 5):not(:has(.concept[aria-pressed="true"])) { display: none; }
 
   /* The example app opens full screen below the top bar */
   .app-preview:not([hidden]) { position: fixed; inset: var(--bar-h) 0 0; z-index: 30; }
@@ -798,5 +653,7 @@ body:has(.fullscreen-menu[open]) { overflow: hidden; }
 }
 
 @media (min-width: 900px) and (min-height: 600px) and (prefers-reduced-motion: reduce) {
-  .work-track { --dive-len: 0; }
+  .portfolio-viewport #work { --dive-len: 0; }
+  .tw-film { transform: translate(-50%, -50%); }
+  .tw-words { display: none; }
 }
