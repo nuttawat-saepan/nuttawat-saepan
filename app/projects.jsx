@@ -43,24 +43,9 @@ export const projects = [
     ],
   },
   {
-    name: "Unitree Go2",
+    name: "Tank Depot",
     screen: "slides",
-    scope: "Autonomous Navigation",
-    stack: "ROS 2 · Nav2 · FAST-LIO · OpenCV · MQTT",
-    period: "2026-08",
-    summary: "ทดสอบและปรับระบบนำทางของหุ่นยนต์สี่ขา ทั้ง simulator, navigation config, AprilTag และเครื่องมือ deploy",
-    concepts: [
-      { title: "Closed-loop simulation", icon: "loop", tag: "TEST", demo: "sim", text: "หุ่นจำลองรับ velocity จาก Nav2 แล้วส่ง pose, odometry, TF และ LaserScan กลับเข้าระบบ เพื่อทดสอบ mission สอง waypoint ใน simulation", learn: "Feedback loop และ integration testing ของ robotics" },
-      { title: "Nav2 root cause", icon: "bug", tag: "DEBUG", demo: "nav2", text: "ไล่อาการที่หุ่นหมุนได้แต่เดินหน้าไม่ได้ จนพบ kinematic limit ที่ขาดใน config แล้วยืนยันด้วย goal ใน simulation", learn: "เชื่อมพฤติกรรมของ controller กับ configuration" },
-      { title: "AprilTag detection", icon: "tag", tag: "VISION", demo: "apriltag", text: "OpenCV detector ที่รักษาลำดับ corners ให้ตรงกับ solvePnP ของ localizer และตรวจทุก N เฟรมเพื่อลดงานบนบอร์ด", learn: "Corner ordering, camera intrinsics และ coordinate transforms" },
-      { title: "MQTT test broker", icon: "message", tag: "COMMS", demo: "broker", text: "broker สำหรับทดสอบที่ parse packet เอง รองรับ wildcard + และ # และป้องกัน shared state ด้วย lock", learn: "Publish / subscribe และ connection lifecycle" },
-      { title: "Deploy + diagnostics", icon: "terminal", tag: "DEVOPS", demo: "deploy", text: "สคริปต์ sync และ build package บนบอร์ดด้วย rsync และ colcon พร้อมเครื่องมือตรวจ DDS และ network เมื่อหา node ไม่เจอ", learn: "Deployment workflow และการไล่ปัญหาระบบกระจาย" },
-    ],
-  },
-  {
-    name: "LCS",
-    screen: "slides",
-    scope: "Tank Depot Management",
+    scope: "Depot Management System",
     stack: "Nuxt 3 · Pinia · Yup · NestJS · TypeORM · MySQL",
     period: "2025-02 → 2026-10",
     summary: "พัฒนาและปรับปรุง workflow ใบประเมินค่าซ่อม ใบแจ้งหนี้ การเบิกคืนอะไหล่ และรายงาน ร่วมกับทีม",
@@ -75,7 +60,7 @@ export const projects = [
     ],
   },
   {
-    name: "Beachboy",
+    name: "Beach Robot",
     screen: "slides",
     scope: "Autonomous Beach Cleaning Robot",
     stack: "ROS 2 · Nav2 · EKF · MQTT · Arduino · Webots",
@@ -88,6 +73,21 @@ export const projects = [
       { title: "Async result guard", icon: "hourglass", tag: "SYSTEM", demo: "guard", text: "ใช้ sequence / epoch กัน callback ของ goal เก่ามาเปลี่ยนสถานะปัจจุบัน และรอ cancel จบจริงก่อนรับแผนใหม่", learn: "Race conditions ระหว่าง goal, pause, stop และ cancel" },
       { title: "Idempotent routes", icon: "hash", tag: "API", demo: "routes", text: "คำขอซ้ำได้คำตอบเดิมตาม plan ID และ payload hash ส่วน ID เดิมที่ payload เปลี่ยนถูกปฏิเสธ", learn: "Request deduplication" },
       { title: "Simulation + faults", icon: "flask", tag: "TEST", demo: "faults", text: "จำลอง MCU และ GNSS ผ่าน pseudo-terminal ใช้ Webots และทดสอบกรณี RTK หลุด สิ่งกีดขวาง และมอเตอร์ไม่ตอบสนอง", learn: "ทดสอบทั้ง happy path และ failure / recovery" },
+    ],
+  },
+  {
+    name: "Unitree Go2",
+    screen: "slides",
+    scope: "Autonomous Navigation",
+    stack: "ROS 2 · Nav2 · FAST-LIO · OpenCV · MQTT",
+    period: "2026-08",
+    summary: "ทดสอบและปรับระบบนำทางของหุ่นยนต์สี่ขา ทั้ง simulator, navigation config, AprilTag และเครื่องมือ deploy",
+    concepts: [
+      { title: "Closed-loop simulation", icon: "loop", tag: "TEST", demo: "sim", text: "หุ่นจำลองรับ velocity จาก Nav2 แล้วส่ง pose, odometry, TF และ LaserScan กลับเข้าระบบ เพื่อทดสอบ mission สอง waypoint ใน simulation", learn: "Feedback loop และ integration testing ของ robotics" },
+      { title: "Nav2 root cause", icon: "bug", tag: "DEBUG", demo: "nav2", text: "ไล่อาการที่หุ่นหมุนได้แต่เดินหน้าไม่ได้ จนพบ kinematic limit ที่ขาดใน config แล้วยืนยันด้วย goal ใน simulation", learn: "เชื่อมพฤติกรรมของ controller กับ configuration" },
+      { title: "AprilTag detection", icon: "tag", tag: "VISION", demo: "apriltag", text: "OpenCV detector ที่รักษาลำดับ corners ให้ตรงกับ solvePnP ของ localizer และตรวจทุก N เฟรมเพื่อลดงานบนบอร์ด", learn: "Corner ordering, camera intrinsics และ coordinate transforms" },
+      { title: "MQTT test broker", icon: "message", tag: "COMMS", demo: "broker", text: "broker สำหรับทดสอบที่ parse packet เอง รองรับ wildcard + และ # และป้องกัน shared state ด้วย lock", learn: "Publish / subscribe และ connection lifecycle" },
+      { title: "Deploy + diagnostics", icon: "terminal", tag: "DEVOPS", demo: "deploy", text: "สคริปต์ sync และ build package บนบอร์ดด้วย rsync และ colcon พร้อมเครื่องมือตรวจ DDS และ network เมื่อหา node ไม่เจอ", learn: "Deployment workflow และการไล่ปัญหาระบบกระจาย" },
     ],
   },
 ];
@@ -150,9 +150,9 @@ export function ProjectScreen({ project, index }) {
 // stacks of the projects listed under each area, so nothing appears that a project didn't use.
 // The one-line descriptions are drafts for the user to confirm.
 const areaList = [
-  { name: "Web", text: "เว็บแอปที่ทำงานกับวิดีโอและ workflow ข้อมูล ตั้งแต่ฟีด Shorts ไปจนถึงระบบจัดการลานถัง", projects: ["oneD", "LCS"] },
+  { name: "Web", text: "เว็บแอปที่ทำงานกับวิดีโอและ workflow ข้อมูล ตั้งแต่ฟีด Shorts ไปจนถึงระบบจัดการลานถัง", projects: ["oneD", "Tank Depot"] },
   { name: "Apps", text: "แอปมือถือสำหรับ live commerce ทั้งฟีดวิดีโอ ตัวตัดต่อ ไลฟ์สตรีม และ backend ที่อยู่เบื้องหลัง", projects: ["ThaiThai"] },
-  { name: "Robotics", text: "ระบบนำทางและควบคุมหุ่นยนต์ ทั้งใน simulator และบนตัวเครื่อง", projects: ["Unitree Go2", "Beachboy"] },
+  { name: "Robotics", text: "ระบบนำทางและควบคุมหุ่นยนต์ ทั้งใน simulator และบนตัวเครื่อง", projects: ["Beach Robot", "Unitree Go2"] },
 ];
 
 export const caseId = (name) => `case-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

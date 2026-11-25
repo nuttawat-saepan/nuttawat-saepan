@@ -213,7 +213,7 @@ export const slides = {
     edges: [[0, 1], [0, 2], [1, 3]],
   },
 
-  // LCS (team project; only the user's own contributions)
+  // Tank Depot (team project; only the user's own contributions)
   search: {
     nodes: [
       { x: 40, y: 260, w: 250, h: 240, title: "Filter changes", tag: "Input", body: <Chips items={["a", "ab", "abc"]} on={["abc"]} /> },
@@ -280,7 +280,7 @@ export const slides = {
     note: "ไม่บีบอัดช่วยประหยัด CPU แลกกับไฟล์ที่ใหญ่ขึ้น · ยังไม่มี benchmark",
   },
 
-  // Beachboy (ROS 2, firmware, simulation)
+  // Beach Robot (ROS 2, firmware, simulation)
   coverage: {
     nodes: [
       { x: 40, y: 150, w: 290, h: 460, title: "Work area", tag: "Polygon", body: "พื้นที่บนแผนที่ และ exclusion zones" },

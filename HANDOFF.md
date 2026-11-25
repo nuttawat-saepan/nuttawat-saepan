@@ -19,6 +19,10 @@ entries of `MOTION_SPEC.md` (newest first). The user writes mostly in Thai; answ
 - Next.js 16 (Turbopack). Lightning CSS drops `backdrop-filter` when a `-webkit-backdrop-filter` follows
   it in the same rule — write only the standard property.
 
+- **Public names (25 Nov):** LCS is shown as **Tank Depot** and Beachboy as **Beach Robot** everywhere on the site (privacy); URLs `/projects/tank-depot`, `/projects/beach-robot`; code uses `DepotScreen` / `BeachScreen` / `depot-*`. Older notes below use the internal names.
+
+- **Robot screens (25 Nov):** Go2 now mirrors the Go2 phone app (canvas voxel map, joysticks, action bar) plus a waypoint Mission card (tap W1/W2 → Start → reached → Complete 2/2); Beach Robot mirrors a "Robot control" dashboard (map, drive pad, Manual/Auto, coverage to 89%, STOP). Both on 1200 × 750 canvases with `--stage-scale`. Details at the top of MOTION_SPEC.md.
+
 ## What was built this session (all in `MOTION_SPEC.md` with timings)
 
 1. **Loader** (`app/motion.jsx` `runOpening`, `.opening*` in `style.css`): slot-machine counter —
@@ -52,7 +56,7 @@ entries of `MOTION_SPEC.md` (newest first). The user writes mostly in Thai; answ
      the next clip's flat background no longer enters as a blank horizontal band mid-swipe.
    - **Unitree Go2** (`Go2Screen`): ground-station view of the closed-loop simulation (map, plan W1→W2,
      scan rays, AprilTag lock, MQTT log, "Mission complete — 2/2").
-   - **LCS** (`LcsScreen`): invoice tank-selection modal (debounced search, selection kept across pages,
+   - **LCS** (`LcsScreen`): real layout from the user's screenshot (blue sidebar, รายการแทงก์ list), mock data; search → Invoice → tank-selection modal.
      other-customer tanks blocked, confirm → toast). Not checked against real LCS screens.
    - **Beachboy** (`BeachboyScreen`): mission control — Preview draws coverage lanes around an exclusion
      zone, Start runs the robot to 89% (the figure from the user's simulation report).

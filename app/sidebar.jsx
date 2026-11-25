@@ -22,6 +22,7 @@ export default function Sidebar({ theme = "paper", home = true }) {
   const Anchor = home ? "a" : Link;
   const menuRef = useRef(null);
   const toggleRef = useRef(null);
+  const progressRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("#home");
 
@@ -77,6 +78,32 @@ export default function Sidebar({ theme = "paper", home = true }) {
     };
   }, [isOpen]);
 
+  // Page progress (25 Nov, after the user's reference): a bright segment rides the rail's right-hand
+  // rule from top to bottom as the page scrolls (on phones, the top bar's bottom rule left to right).
+  // On home the vertical scroll drives the sideways row, so one figure covers both layouts.
+  useEffect(() => {
+    const thumb = progressRef.current;
+    let frame = 0;
+    function paint() {
+      frame = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      thumb.style.setProperty("--p", progress.toFixed(4));
+    }
+    const request = () => { if (!frame) frame = requestAnimationFrame(paint); };
+    paint();
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
+    const observer = new ResizeObserver(request);
+    observer.observe(document.body);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", request);
+      window.removeEventListener("resize", request);
+      observer.disconnect();
+    };
+  }, []);
+
   function menuButton(className) {
     return (
       <button className={className} type="button" onClick={toggleMenu}
@@ -93,9 +120,11 @@ export default function Sidebar({ theme = "paper", home = true }) {
         {menuButton("mobile-menu-toggle")}
       </div>
 
+      <span className="page-progress" aria-hidden="true"><span ref={progressRef} /></span>
+
       <div className="sidebar">
         {menuButton("sidebar-toggle")}
-        <span className="sidebar-edition" lang="en">Folio — Edition</span>
+        <span className="sidebar-edition" lang="en">Bangkok — TH</span>
         <Anchor className="sidebar-name" href={to("#home")} aria-label="Nuttawat Saepan — Home">Nuttawat Saepan</Anchor>
         <span className="sidebar-year">© 2026</span>
       </div>
@@ -103,6 +132,8 @@ export default function Sidebar({ theme = "paper", home = true }) {
       <dialog ref={menuRef} className="fullscreen-menu" id="sidebar-navigation" aria-label="เมนูหลัก" onClose={() => setIsOpen(false)}>
         <div className="menu-heading">
           <Anchor className="menu-brand" href={to("#home")} onClick={() => closeMenu({ restoreFocus: false })}>Nuttawat Saepan<i className="dot" aria-hidden="true">.</i></Anchor>
+          {/* After the user's reference: a plain "CLOSE" word top right of the panel, in our sans. */}
+          <button className="menu-close" type="button" onClick={() => closeMenu()} aria-label="ปิดเมนูหลัก"><span>Close</span></button>
         </div>
         <nav className="menu-links" aria-label="เลือกส่วนของพอร์ต">
           {sections.map(([label, href], index) => (

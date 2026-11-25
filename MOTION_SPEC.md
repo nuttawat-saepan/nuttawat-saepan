@@ -1,3 +1,143 @@
+# Fullscreen project routes — 25 November 2026
+
+User requests `/projects/…` fullscreen without vertical page scrolling. Both All work and project detail routes now occupy the available dynamic viewport (below the top bar on narrow screens, beside the rail on desktop). Home's scroll spacer is disabled only on these routes. Detail header and navigation stay in view; desktop uses three bounded columns, with long text/list content scrolling inside its column if needed. Narrow screens keep the content in a bounded reading area between header and footer. All work uses a horizontal snap row of cards instead of a vertically growing grid. These are implementation choices for the requested viewport behaviour, superseding the earlier scrolling project-page layout.
+
+---
+
+# Contact scroll container — 25 November 2026
+
+User reports middle-mouse scrolling cannot leave section 04. At 1440×900, Contact inherited overflow-y:auto and overscroll containment despite having no internal overflow (scrollHeight/clientHeight both 900). Removed this unnecessary nested scroll container on desktop with overflow:clip and overscroll-behavior:auto, so native scroll targeting can reach the document. Verified wheel-up leaves Contact (document y8644 → y8081.6, footer scrollTop0). Native middle-click autoscroll movement could not be verified in the in-app browser; clarification of wheel versus middle-click is pending. Narrow-screen layout is unchanged.
+
+---
+
+# Contact: Back to home — 25 November 2026
+
+User requested a bottom-right button in section 04. Added `Back to home ↑` beneath location/time, using the existing text-link cursor and underline animation. On desktop the return group occupies the bottom-right grid cell; on narrow screens it remains right-aligned below the email. The #home link uses the existing smooth section navigation. Verified at 1440×900: button y811–855 (44px target); clicking returns from scrollY8644 to 0 with the horizontal row at 0.
+
+---
+
+# Contact glow edge fix — 25 November 2026
+
+User screenshot also showed a hard vertical seam through the final Contact dot. The clipped background ended at the tight headline's horizontal paint-box edge. Expanded `.ct-glow` on all sides using negative insets and matching padding; text starts at the same coordinates as `.ct-base` without changing layout. Browser hover over the final dot confirmed continuous fill across its full width.
+
+---
+
+# Home glow descender fix — 25 November 2026
+
+User screenshot showed a hard black strip at the bottom of the p in Saepan while grey glow was active. The tight headline line-height left the descender outside the glow background's paint box. Expanded only the Home glow fill's vertical padding (.12em top, .24em bottom), compensated with negative margins so the duplicate stays aligned and the headline layout stays fixed. Browser hover check confirmed the grey glow now covers the full p descender with no horizontal cutoff. Contact glow is unaffected.
+
+---
+
+# Project order — 25 November 2026
+
+User order: oneD → ThaiThai → Tank Depot (LCS) → Beach Robot → Unitree Go2. Updated the shared `projects` array so Home, All work and case-study Next project links follow the same order. Robotics links follow Beach Robot → Unitree Go2 as well. Names and slugs stay unchanged.
+
+---
+
+# Go2 2D SLAM video and area generation — 25 November 2026 (latest)
+
+User requested area/waypoint generation and a more attractive 2D SLAM map based on the supplied Live map reference. This replaces Go2's 3D voxel app preview below.
+
+- Go2: generated white occupancy-grid floorplan, slate walls with restrained scan speckle, grey unknown areas, cyan robot marker, area outline and route. A dark Live map header and light mission sidebar keep the reference's map style while simplifying the controls.
+- 14s loop: tap four area corners (0.6–2.4s) → Generate waypoints (3.5s) → four numbered waypoints appear → Start mission (5.1s) → robot follows the path, reached points turn green and progress advances → Complete 4/4 (11.6s), hold to 14s. This is an illustrative UI proposal, not evidence of a production area-generation feature or a recorded four-waypoint run.
+- Beachbot: now also draws its area boundary first (0.4–2.4s), presses Generate path (3.1s), draws coverage lanes, then starts at 4.7s and finishes at 11s; 14s loop, same simplified illustrated coast.
+- Assets: `go2-slam-mission.mp4/.jpg`, updated `beachbot-coverage.mp4/.jpg`. Reproducible renderers in `scripts/render-go2-video.cjs` and `scripts/render-beachbot-video.cjs`. Both are 1200×750, 24fps H.264 with faststart and no audio; all data and maps are simulated.
+- Shared `RobotPreviewVideo` plays only the selected showcase, pauses on deselection, and holds a planned-route frame for reduced motion (Go2 4.5s, Beachbot 4.2s).
+- Verified: MP4 decodes without errors; final Go2 frame shows Complete 4/4. Browser plays Go2 (14s video) when selected and pauses it when switching to Beachbot, which starts its own 14s video.
+
+---
+
+# Profile: remove View projects — 25 November 2026
+
+User: "this button no need" (screenshot of View projects). Removed the View projects link from the Profile section, leaving the role caption in place. This supersedes the Profile CTA in earlier entries below.
+
+---
+
+# Home name: white core, red rim — 25 November 2026
+
+User rolled back the cyan trial. The Home name again uses a white core (0–15% of the radius), transitioning to the portfolio red at 45%, then fading through translucent red to transparent at the edge, clipped inside the letters. It keeps the slower 420 ms mouse-follow time constant requested earlier (was 140 ms). Fade timing, mobile wandering and reduced-motion behaviour stay as specified; Contact keeps its existing colours and 140 ms following.
+
+---
+
+# Beachbot simplified coverage-planner video — 25 November 2026
+
+User supplied a coverage-planner screenshot and requested a similar video with fewer details.
+
+- Created a deterministic 12-second, 24 fps, 1200×750 H.264 MP4 (`public/assets/beachbot-coverage.mp4`) and poster (`beachbot-coverage.jpg`), generated by `scripts/render-beachbot-video.cjs` with Sharp and FFmpeg. This is a rendered UI animation, not AI-generated footage or a real robot recording.
+- Keeps the reference's dark/cyan palette, map left, robot status right, camera inset, Auto strip and planner cards below. Simplifies terrain to an illustrated coast, one coverage plan, row spacing and margin. No real map imagery, telemetry or customer data.
+- Flow: Preview at 1.4s → cyan lanes draw over 1s → Start at 3.7s → robot follows the serpentine with a trail and coverage counter → Complete at 10s, holds until loop at 12s. Coverage ends at 89%, matching the existing simulation notes; SIMULATION stays visible.
+- `BeachScreen` now plays this video only while selected, pauses when inactive, and holds the planned-route frame at 2.8s for reduced motion. Other showcases are unchanged by this update.
+
+---
+
+# Robot screens follow the user's references; Go2 gets a waypoint mission — 25 November 2026
+
+User: "I want more close to these 2 refs" (a screenshot of the Go2 phone app's voxel map view, and a "Robot control" web dashboard), then "don't forget mission management / waypoint create". Both screens are now drawn on a 1200 × 750 canvas scaled by `--stage-scale`, like the depot screen. They supersede the earlier ground-station and mission-control versions below.
+
+- **Unitree Go2** (`Go2Screen`): a canvas draws a generated LiDAR-style voxel corridor in perspective — walls two voxels thick of uneven height, coloured by height (yellow, orange, red-orange, magenta, purple), a cyan floor fading with distance, a dark grid ground — and the robot from behind, legs stepping while it walks. Over it, as in the reference: back chevron, battery (84%), 37°C, a red "SIM · LiDAR map" tag, two round icons, link speed, •••; a camera inset (an illustrated room that bobs while walking); a red "« ST" tab and white camera / record buttons on the right; two orange translucent joysticks; indigo person and menu buttons; the action bar (stand up, sit down, crouch down, lock on, pose dimmed, keep walk).
+  - **Mission** (the user's 2-waypoint mission work): a card top right — "Mission" with a state chip (Draft → Running → Complete 2/2), the waypoint list with distance and "next" / "reached", and "▶ Start mission". Flow (repeats): tap stand up → tap the floor twice, dropping pins W1 (9 m ahead, 1 m left) and W2 (16 m, 1.5 m right) with a dashed route from the robot → tap Start → the robot walks; each pin turns green with ✓ when the robot (about 4 m ahead of the camera) reaches it → "Complete 2/2" → sit down. A fingertip disc shows each tap.
+  - The voxels are generated, not a real map; the SIM tag keeps it honest (the notes confirm the mission in simulation only).
+- **Beach Robot** (`BeachScreen`): the "Robot control" dashboard — an icon rail (robot logo, drive (active), map, history, settings), an illustrated top-down shore map (sea, rocky edge, lawn, sand paths, tree clumps; "Map: illustration", 20 m scale) with the robot marker and a pulsing halo, map buttons (layers, +, −, locate) and a "Live" camera inset; the panel: Robot control ⚙, "beach-sim-01 ▾", ● Connected, battery 85%, RTK Fixed, Manual / Auto, Drive pad (cyan knob, "Release to stop"), Speed − 1 +, STOP, Capture / Record / More. Accent cyan #25d0e0 as in the reference.
+  - Flow (14 s, pointer): hold ↑ on the drive pad — the robot rolls north, stops on release → Auto — a dashed work area, a hatched exclusion zone round a tree clump and nine coverage lanes (the three by the clump stop short) draw in → the robot runs the serpentine leaving a cyan trail while "Coverage n%" climbs to 89% (the user's simulation report) → STOP → "Stopped".
+- Verified in the browser (screen copied out at full size): both layouts render; the Go2 mission runs Draft → W1, W2 added → Running → W1 reached → Complete 2/2; Beach Robot runs Manual → Auto 0 → 89% → Stopped.
+
+---
+
+# Follow-ups: text-button disc, progress on the left edge, name glow, favicon — 25 November 2026 (late)
+
+User decisions on the evening entry below.
+
+- **Text buttons** (View projects, View all work): user's pick C of three. The ring no longer hides: it fills into an 84 px white disc with `mix-blend-mode: difference` (450 ms size change, as other states), inverting the label under it; the lean and the Line relay stay.
+- **Page progress** moves to the rail's **left** edge (the screen edge): a 2 px track in the rail's rule colour, the 2 px × 18% segment in its text colour. Phones unchanged.
+- **Selected projects**: the footnote "✻ Screens are redrawn on mock data…" is removed; "View all work →" sits alone at the bottom right.
+- **Home name** (`app/hero-name.jsx`): the name's box fits the words (`justify-self: start`; 825 px at 1440 × 900, was the full row), so the Hello badge and the glow answer to the name only. **Letter glow** on the name (user: "try melius in Nuttawat Saepan."): the same glow as Contact, now shared in `app/letter-glow.js` (`.glow-layer` fades, `.glow-fill` is clipped to its text). On the name the letters are ink on paper and the glow turns them red with the warm highlight. The glow copy is a sibling in the same grid cell with the same line spans, so the loader's line entrance plays on it too; each line is its own fill, aligned to one point by the hook. The Hello badge still appears over the name, on top of the glow — to review with the user.
+- **Favicon** (user's pick 3): `app/icon.svg`, "N." in ink (#0e0e0e) on the portfolio red, 6/32 corner radius; `app/apple-icon.jsx` renders the same at 180 px, full bleed. Both serve (200) and are linked in the head.
+- Checked in the browser at 1440 × 900 (pane hidden; transitions forced off, glow position set by hand): name glow visible inside the letters only; magnet state 84 px white disc, difference; progress at x 0, 2 × 900 px; no console errors.
+
+---
+
+# Cursor, menu, progress rail, Projects scroll, Contact — 25 November 2026 (evening)
+
+User decisions from a review list with screenshots (khanhnguyen.design menu and last panel, a rail scrollbar) and a recording of melius.com's footer (`C:\Users\nutta\Videos\2026-11-25 22-28-17.mp4`).
+
+- **Cursor** (`app/cursor.jsx`, `style.css`): the menu (hamburger) buttons lose the sticky red dot and the lean; they show the plain ring (user: "ring default ปกติเลย"). The menu's big chapter links use the **Viewfinder** "[ OPEN ]" like project routes (was the faint 120 px disc, which vanished on the ink panel because the header's theme was paper). Anything inside the open menu now reads as ink. **Invert**: the plain ring and the 56 px control ring are white with `mix-blend-mode: difference`, so they show the inverse of what is under them (they no longer take the red); filled states (Hello, Loading, Viewfinder) keep their colours. Open: the ring still hides on the Line relay buttons (View projects, View all work) — options pending.
+- **Menu** (`sidebar.jsx`): a "CLOSE" word top right of the panel (Geist 500, clamp(1rem, 1.9vw, 1.6rem), uppercase, no box; on hover it lifts out and back in, 600 ms), as on the reference. Closing is slower: the labels drop over 500 ms (cubic-bezier(.65, 0, .35, 1)), the panel wipes back over 1000 ms with the same ease after 120 ms (was 600 ms ease-out). Opening is unchanged (600 ms).
+- **Rail label**: "Folio — Edition" → "Bangkok — TH".
+- **Page progress** (`sidebar.jsx` `.page-progress`): observed on the reference: a 1 px faint full-height rule with a 2 px bright segment (about 18% of the height). Implemented on the rail's right-hand rule: segment 2 px × 18% in the rail's text colour, moved by `--p` = scrollY / max scroll (rAF on scroll). Phones: the top bar's bottom rule, 18% wide, left to right. Hidden while the menu is open.
+- **Projects** no longer scrolls vertically: at 1440 × 900 the laptop's 3D lid and scaled slide stage reported 918/900 px, which made the panel a vertical scroller that took the wheel. The panel is `overflow: clip` like THE WORK.
+- **Contact** (`app/contact.jsx`, replaces the red footer): theme ink. Layout after the reference's last panel: "04 / contact" top left, GitHub ↗ · Resume ↗ top right, "Get in touch." huge (Geist 500, clamp(6rem, min(15vw, 30dvh), 18rem), line-height .88), "CONTACT TO" + the email (underlined, about 2.5vw) bottom left, "Bangkok, Thailand — HH:MM GMT+7" bottom right (live Bangkok time). "Back to home" and the meta row are gone, as on the reference.
+  - Observed on melius.com (8.5 s, 30 fps): grey letters (#3d3d3d on #1a1718) over a faint dot grid; a soft blob about 12% of the page wide trails the pointer and lights only the letters, its colour shifting between orange and blue; dots near it brighten; it fades out about 300 ms after the pointer leaves the letters.
+  - Implemented: letters #3b3b38 on ink over a 12 px dot grid (paper 7%); a copy of the headline on top is filled with two radial gradients — the portfolio red (solid to 22%, half to 55%, radius clamp(8rem, 15vw, 17rem)) and a warm paper highlight (60% radius, offset up-right) — clipped to the letters; a brighter dot grid (paper 38%) shows through a radial mask at the same point. The glow follows the pointer with a 140 ms time constant, lights while the pointer is over the headline or within a quarter of its height of it, fades in 250 ms and out 500 ms. Without a pointer (phones) it wanders across the letters while the panel is in view. Reduced motion: no glow.
+  - Data: email and GitHub (`github.com/nuttawat-saepan`) from the repository; Resume points to `public/resume.pdf`, which does not exist yet.
+- Checked in the browser (pane hidden, so transitions were forced off for screenshots): Projects 918/900 clipped; menu CLOSE at the panel's top right and closes the menu; progress `--p` 0 at the start and 1 at Contact; Contact glow and dots at 1440 × 900 and 390 × 600, no horizontal overflow, no console errors. Not yet seen moving: the glow's trail, the slower close, the inverted ring.
+
+---
+
+# Public project names: LCS → Tank Depot, Beachboy → Beach Robot — 25 November 2026
+
+User decision (privacy / PDPA): the internal names LCS and Beachboy are not shown on the site; use plain names that say what the project is.
+- `app/projects.jsx`: "LCS" → **"Tank Depot"** (scope "Depot Management System"), "Beachboy" → **"Beach Robot"**; the What I do "Seen in" lists follow. Project URLs come from the name, so they are now `/projects/tank-depot` and `/projects/beach-robot`; the old `/projects/lcs` and `/projects/beachboy` return 404.
+- The laptop screens: the depot app's logo reads "Depot" instead of "LCS"; the robot screen reads "Beach Robot · Mission control". Component and class names changed with it (`DepotScreen`, `BeachScreen`, `depot-*` classes) so the internal names don't appear in the page's HTML either.
+- Older entries below still say LCS and Beachboy; read them as Tank Depot and Beach Robot. `PROJECT_CONCEPTS.md` keeps the internal names (it is the user's private source notes).
+
+---
+
+# Chapter I / II follow the reference layout, Geist Mono chapter labels — 25 November 2026
+
+User decision: copy the reference's Chapter I (Quick intro) and Chapter II (Related work) layouts from the user's screenshots of khanhnguyen.design, and replace its serif "CHAPTER I/II" with "01 / profile" and "02 / projects" in Geist Mono (pick 3 of three label options). Themes stay as they were (Profile and Projects ink); only the layout changed.
+
+Observed in the screenshots (2000 px wide): two halves with a narrow gap, the right half starting at about 51%. Chapter I: "CHAPTER I" top left, a two-line note bottom left; right half "QUICK INTRO" (small, uppercase, regular), a four-line intro at about 2.5vw, then a small uppercase quote on the left and a 3:4 portrait filling the right of the half, "More about me →" bottom left aligned with the portrait's bottom. Chapter II: "CHAPTER II" top left, a 16:9 placeholder about 30% of the page wide bottom left; right half "RELATED WORK", a names-only list (regular weight, about 5.5vw, hairlines between rows, none after the last), then a footnote ("❊ LIVE SITE UNAVAILABLE…", uppercase) bottom left of the half and "View All Work →" bottom right. No hover state in the screenshots; the 24 November entry records hover (others grey, ↗ on the lit one).
+
+Implemented (`app/page.jsx`, `app/selected-work.jsx`, `app/style.css`; desktop ≥ 900 × 600):
+- **Chapter label** (`.chapter`): number in Geist Mono 500, clamp(1.8rem, 2.4vw, 3rem), −.06em; "/ profile" or "/ projects" in Geist Mono 400 at about .9vw in the section's muted colour. Geist Mono joins the Google Fonts import (`--mono`).
+- **Captions** "Quick intro" and "Related work": Geist 400, uppercase, about .8vw, in the text colour (were 500/600 tracked and muted). Profile's "(01)" prefix is gone; the chapter label carries the number.
+- **Profile**: full panel, columns 1fr 1fr, gap clamp(1rem, 1.6vw, 2rem). Left: label top, note "Off the web: robots — ROS 2, Nav2 and AprilTags." bottom (placeholder from the Go2 project until the user gives their own line). Right (`.profile-main`): caption, intro (clamp(1.2rem, min(2.3vw, 4.6dvh), 3rem), line-height 1.36 for Thai), then a row with "Software Engineer / Web / Apps / Robotics" + "View projects →" and the 3:4 portrait (width min(column, 36dvh), right-aligned; columns 1fr 1.2fr). The caption starts at the portrait's top and the link ends at its bottom, level with the left note. Entrance: the label and note join the existing fade-up (note with the link, +550 ms).
+- **Selected projects**: the laptop (with its per-project live mocks) is the bottom-left preview at 72% of the left half (max 75dvh); its caption (summary, stack) and the "Hover to preview · Click to explore" hint are removed. Names only: numbers and the scope / "What's inside" meta are hidden on desktop, weight 400, clamp(2.6rem, min(5.4vw, 9.5dvh), 7.5rem), line-height 1.1, rows 1.3dvh / 1.7dvh padding, no rule under the last. All names are in the text colour until the list is hovered or focused; then the others turn muted and the lit one shows ↗. The footnote moved under the list, left of "View all work →".
+- **Phones**: unchanged order apart from the chapter label above each section; Profile's note comes last; Projects keeps numbers and every row's meta, then "View all work →" and the footnote.
+- Checked in the browser at 1440×900 and 1200×640 (no overlap; the right half starts at 51% of the panel; the portrait is 3:4; hovering ThaiThai greys the others and shows ↗) and at 375×812 (single column, no horizontal overflow).
+
+---
+
 # ThaiThai preview cleanup — 24 November 2026
 
 User screenshot showed a partial next feed clip as a flat green band and the folded laptop stretching behind the phone.
@@ -29,6 +169,12 @@ User clarification: refreshing Home should return to the first panel, not keep t
 
 ---
 
+# Profile portrait crop — 25 November 2026
+
+User: "zoom top of body, I don't want to see the pants". The portrait (`public/assets/nuttawat-saepan.webp`, 1000×1500) keeps its 3:4 frame but is anchored at the top (`object-position: center top`) and zoomed 1.22× from 15% across (`scale`, `transform-origin: 15% 0`; first 53%, which left the body off to the left — user: "my body is too left"), with the figure clipping the overflow. The frame now runs from above the hair to mid-torso, above the cuffs and belt. The entrance animation's `transform: scale(1.08) → none` still applies on top.
+
+---
+
 # Selected projects: device reveal and a live mock per project — 24 November 2026
 
 User decision: the Selected projects laptop shows each project as a short live mock instead of its first concept slide, using motion like the user's references (kisracorp.com `service1–3.mp4`), starting with oneD. What's inside stays on the project pages. The references are Kisra's marketing clips (service1 is oneD's movie side); none of their footage is used.
@@ -43,9 +189,9 @@ Implemented (`app/selected-work.jsx`, `app/oned-showcase.jsx`, `app/showcases.js
   - *Player* (as on the live site): black, ✕ top-left and a sound icon, a 9:16 player in the middle (caption "<title> · EP.n" at the bottom), an action column to its right (like with count, ตอนทั้งหมด, รายการของฉัน, แชร์) and ↑ ↓ buttons at the far right. Clips are flat colour with two soft figure shapes drifting slowly.
   - *Flow* (11.2 s, repeats; a pointer acts it out like a screen recording): list → pointer to the second poster, press (scale .96 with a ring) → the player fades in → ↓ (next episode) → like (heart fills red) → ↓ → ✕ → back to the list. The pointer glides 700 ms between targets; pages cross-fade 400 ms.
 - **No oneD phone** (user: "oneD I didn't do phone app, remove it"). The engineering annotations of the first version (shared-player frame, HUD, debounce note) are off the screen; they belong to What's inside.
-- **ThaiThai** (user: "ThaiThai is a phone app"): the laptop folds shut and a phone (27% of the laptop width, 9:19.5) rises in the middle (translateY 25% → 0, 800 ms). Tab names are the real app's, read from `thaithai-flutter` (`footer_menu_bar.dart`, `top_floating_menu.dart`, `app_th.arb`): top สำหรับคุณ · ไลฟ์ · ครีเอเตอร์; bottom หน้าแรก · มอลล์ · + · Fortune AI · โปรไฟล์; ชำระเงิน, ยืนยันสั่งซื้อ, ส่งฟรี. Flow (11.6 s, a fingertip disc acts it out): feed swipe to the next clip → tap ไลฟ์ → live room (host, LIVE, viewers, chat lines arriving, pinned product "เซรั่มหน้าใส ฿299 · ส่งฟรี") → ซื้อเลย → order sheet (total, ยืนยันสั่งซื้อ) → PromptPay QR → สั่งซื้อสำเร็จ → back to the feed. Mock users/products; portfolio red, not the app's blue.
+- **ThaiThai** (user: "ThaiThai is a phone app"): the laptop folds shut and a phone (9:19.5, height min(126cqw, 72dvh) — 58% of the laptop's width, about 2.2× the first 27% build, which the user found too small; it stands taller than the laptop) rises in the middle (translateY 25% → 0, 800 ms). Tab names are the real app's, read from `thaithai-flutter` (`footer_menu_bar.dart`, `top_floating_menu.dart`, `app_th.arb`): top สำหรับคุณ · ไลฟ์ · ครีเอเตอร์; bottom หน้าแรก · มอลล์ · + · Fortune AI · โปรไฟล์; ชำระเงิน, ยืนยันสั่งซื้อ, ส่งฟรี. Flow (11.6 s, a fingertip disc acts it out): feed swipe to the next clip → tap ไลฟ์ → live room (host, LIVE, viewers, chat lines arriving, pinned product "เซรั่มหน้าใส ฿299 · ส่งฟรี") → ซื้อเลย → order sheet (total, ยืนยันสั่งซื้อ) → PromptPay QR → สั่งซื้อสำเร็จ → back to the feed. Mock users/products; portfolio red, not the app's blue.
 - **Unitree Go2** (ground station): top bar "Ground station · ROS 2 · Nav2 · FAST-LIO" with a blinking "closed-loop simulation" tag; left, a top-down map (walls, dotted grid) with the red dashed plan through W1 and W2, the robot driving it (0.16 px/ms, 700 ms stop at W1) with 24 scan rays clipped by the walls and a white trail; right, mission n / 2, cmd_vel, an AprilTag camera whose red brackets snap in when the tag locks, and a log (nav2 goals, "mqtt mission/status → W1/W2 reached", "apriltag: id 07 · pose locked"). Ends on "Simulation result — Mission complete — 2 / 2 waypoints", then repeats.
-- **LCS** (invoice tank selection, light admin UI): sidebar แดชบอร์ด · ใบประเมินค่าซ่อม · ใบแจ้งหนี้ (current) · เบิกคืนอะไหล่ · รายงาน; modal "เลือกแทงก์". Flow (11.4 s, pointer): type "TK-01" → spinner for 250 ms (debounce) → results; tick two tanks; a tank of another customer is greyed and shows "คนละลูกค้า — เลือกไม่ได้"; page 2, tick one; back to page 1, the ticks are still there; ยืนยัน → toast "สร้างใบแจ้งหนี้แล้ว · 3 แทงก์" and a new invoice row. Fictional customers (Alpha Logistics, Bravo Chemicals) and tank numbers. Not checked against the real LCS screens (no recording, repo not on this machine).
+- **LCS** — rebuilt to the real layout from the user's screenshot of the live app (25 Nov; the first version was an invented admin UI). Drawn on a 1200 × 750 canvas scaled to the screen by `--stage-scale`: white logo strip "LCS" and a blue (#2b6be5) sidebar with the real menu (Dashboard, Depot inventory, Issue List, Estimate, Invoice, Cargo, Tariff, Spare Part, Customer, User Management, Report; SUPPORT · Logout); header "รายการแทงก์"; search box with a blue search button and "Advanced search"; tabs Expected Arrival / Current Inventory / Tank History with "Plan Clean Date" and "Booked"; the "Current Inventory List" card with + สร้างแทงก์ · ดาวน์โหลด · ดาวน์โหลดทั้งหมด · ดาวน์โหลดแบบกรองข้อมูล and its columns (เบอร์แทงก์ … วันที่ล้างเสร็จ), grey product pills, green AVL/IND and Available/Cleaning badges, light-blue BKD/Booked; pagination. All data is made up (customers Alpha Logistics / Bravo Chemicals / Coral Shipping, tank numbers DMOU…, products, "demo user"); the screenshot's customers, tank numbers and a teammate's email are not used. Flow (15 s, pointer): type "DMOU25" in the search → spinner 250 ms (debounce) → the list narrows → Invoice in the sidebar → "+ สร้างใบแจ้งหนี้" → modal "เลือกแทงก์" (same customer only): tick two, another customer's tank shows "คนละลูกค้า — เลือกไม่ได้", page 2 tick one, back to page 1 with the ticks kept → ยืนยัน → toast "สร้างใบแจ้งหนี้สำเร็จ · 3 แทงก์" and a new Draft row. The Invoice page and modal are styled to match; their real layout has not been seen.
 - **Beachboy** (mission control): state chip IDLE → PLANNED → RUNNING → COMPLETE, RTK FIX, simulation tag; map with sea strip, dashed work area, margin and a hatched exclusion zone; Coverage panel (spacing 0.8 m, margin 0.5 m, bearing 0°, Preview / Start / Stop). Pointer presses Preview → nine lanes draw in (the top three stop short of the exclusion zone) → Start → the robot runs the serpentine with a wide trail while "Covered" climbs to 89% → "Simulation · 8 × 6 m — 89% covered, no collisions" (the figures in the user's test report).
 - The loops run only for the project on show, after the reveal; reduced motion holds a still frame and skips the reveal.
 - The note under the laptop now reads "Screens are redrawn on mock data from my notes; live sites stay private for NDA or internal projects".
@@ -78,8 +224,8 @@ Observed on the reference (its `common.js` and computed styles): an 80 px ball s
 Implemented (`app/cursor.jsx`, mounted in `app/layout.jsx`; styles in `app/style.css`), desktop pointers only (`hover: hover` and `pointer: fine`); phones keep their native behaviour:
 1. **Default**: a 28 px gray ring (1.5 px, rgb(150 150 146 / .8); first built at 40 px / 3 px, which the user found too big and heavy) that trails the pointer with a 90 ms time constant. The native pointer is hidden.
 2. **Name** (`.hero-name`): **Hello badge** (user's pick N2 of three; replaces the first-built smiley). A 100 px red disc; "HELLO • สวัสดี • HELLO • สวัสดี •" in paper (600, 10.5/100 of the disc) runs round its edge, turning once every 7 s, with a paper dot in the centre. It scales in from .5 (450 ms).
-3. **Top bar and rail controls** (`.site-header a, button`): a 120 px disc of the section's text colour at 7–9% opacity.
-4. **Text buttons** (Scroll, View projects, View all work, Back to home): **Ink sweep** (user's pick B1; replaces the red arrow disc). The ring hides and the button leans towards the pointer (a quarter of the offset, at most 14 px across, 10 px down), easing back when left. A pill in the section's text colour (`--fg`), .35em × .7em larger than the label, sweeps in from the left (450 ms, cubic-bezier(.65, 0, .35, 1)); the label turns the section's background colour (`--bg`) and its underline fades. On the red footer the pill is ink with red text.
+3. **Top bar and rail controls** (`.site-header a, button`): a 120 px disc of the section's text colour at 7–9% opacity. **Menu (hamburger) button** (user: make it magnetic): the disc sticks to it instead — it heads for the button centre (drifting 15% towards the pointer) as a small solid 20 px dot in the accent `--red` (user: "small and orange"; first built as a faint disc 1.3× the button), and the button leans a fifth of the way towards the pointer, at most 8 px, easing back when left (`data-stick`, state "stick").
+4. **Text buttons** (View projects, View all work, Back to home): **Ink sweep** (user's pick B1; replaces the red arrow disc). The ring hides and the button leans towards the pointer (a quarter of the offset, at most 14 px across, 10 px down), easing back when left. A pill in the section's text colour (`--fg`), .35em × .7em larger than the label, sweeps in from the left (450 ms, cubic-bezier(.65, 0, .35, 1)); the label turns the section's background colour (`--bg`) and its underline fades. On the red footer the pill is ink with red text. Home's "Scroll" is excluded (user: no interaction on it — its box spans the column, so the pill stretched across it); it keeps the plain ring. **Update — Line relay** (user's pick A of three, replaces the Ink sweep): no pill; the underline (now drawn by `::after` in currentColor) wipes out to the right (350 ms), then a 1.5 px accent line draws in from the left (450 ms, +250 ms); the arrow runs out right and fades, then comes back from the left in the accent (700 ms, cubic-bezier(.65, 0, .35, 1)). The accent is `--red`, or paper on the red footer. Works on `:hover` and `:focus-visible`; the magnetic lean stays.
 5. **Project routes** (Related work rows and "What's inside", What I do "Seen in" links, `/projects` cards, next project): **Viewfinder** (user's pick R3; replaces the frosted "[ Open ]" disc). The ring opens to a 104 px square of four 16 px corner brackets (2 px, the section's text colour) with a 5 px red centre dot and "[ OPEN ]" (.62rem, tracked .1em) just below the centre.
 6. **Loading** (while `data-opening` is loading, counting or exiting): a 120 px frosted disc (paper at 5% with a 6 px backdrop blur — first 10% / 10 px, user asked for lower opacity; before that a solid #1f1f1e) with "[ Loading ]" in paper, the label filling the disc so its text sits exactly in the centre; the cursor is centred on screen until the pointer moves.
 - Any other control: the ring grows to 56 px and turns red. Pressing shrinks the cursor to 85%.

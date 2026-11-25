@@ -6,10 +6,13 @@ import { useEffect, useRef } from "react";
 // specified in MOTION_SPEC.md. One ring follows the pointer with a short lag and changes state by
 // what is under it; the first matching rule wins.
 const LOADING = ["loading", "counting", "exiting"];
-// Text buttons that lean towards the pointer; the ring hides and an ink pill sweeps in behind them.
-const MAGNETIC = ".hero-scroll, .profile-link, .work-link, .wl-all";
-// Links that open a project route: the ring becomes a viewfinder.
-const OPEN = ".wl-item, .wl-inside, .what-seen a, .pj-card, .pj-next";
+// Text buttons that lean towards the pointer; the ring hides and their underline relays (style.css).
+const MAGNETIC = ".profile-link, .work-link, .wl-all";
+// Links the cursor leaves alone: just the plain ring (user: no interaction on Home's "Scroll", and
+// the menu (hamburger) buttons are plain again — 25 Nov: "ring default ปกติเลย").
+const PLAIN = ".hero-scroll, .sidebar-toggle, .mobile-menu-toggle, .menu-close";
+// Links that open a project route, and the menu's big chapter links: the ring becomes a viewfinder.
+const OPEN = ".wl-item, .wl-inside, .what-seen a, .pj-card, .pj-next, .menu-links a";
 // Top bar and side rail controls.
 const BAR = ".site-header :is(a, button)";
 // The name: a red badge with "HELLO • สวัสดี" turning around its edge.
@@ -50,7 +53,7 @@ export default function Cursor() {
 
     function resolve(element) {
       if (LOADING.includes(root.dataset.opening)) return ["loading", LOADING_LABEL, null];
-      if (!element) return ["default", "", null];
+      if (!element || element.closest(PLAIN)) return ["default", "", null];
       const magnetic = element.closest(MAGNETIC);
       if (magnetic) return ["magnet", "", magnetic];
       if (element.closest(OPEN)) return ["open", OPEN_LABEL, null];
@@ -74,7 +77,8 @@ export default function Cursor() {
     function update() {
       const element = document.elementFromPoint(x, y);
       const [next, text, magnetic] = resolve(element);
-      const nextTheme = LOADING.includes(root.dataset.opening) ? "ink" : element?.closest("[data-theme]")?.dataset.theme ?? "paper";
+      // The open menu is ink whatever theme the header carries.
+      const nextTheme = LOADING.includes(root.dataset.opening) || element?.closest(".fullscreen-menu") ? "ink" : element?.closest("[data-theme]")?.dataset.theme ?? "paper";
       if (magnetic !== magnet) {
         releaseMagnet();
         if (magnetic && !reduce.matches) {
@@ -113,7 +117,7 @@ export default function Cursor() {
       ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
 
 
-      // Magnetic buttons lean a quarter of the way towards the pointer, at most 14 px.
+      // Magnetic buttons lean a quarter of the way towards the pointer, at most 14 px across, 10 px down.
       const pull = Math.min(1, dt / 70);
       if (magnet) {
         const box = magnet.getBoundingClientRect();

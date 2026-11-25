@@ -39,378 +39,191 @@ export function Pointer({ at, press }) {
   );
 }
 
-/* ───────────── Unitree Go2: ground-station view of the closed-loop simulation ───────────── */
-
-const GO2_PATH = [[80, 320], [300, 300], [300, 110], [450, 110], [540, 300]];
-const GO2_WALLS = (() => {
-  const walls = [[20, 20, 620, 20], [620, 20, 620, 380], [620, 380, 20, 380], [20, 380, 20, 20]];
-  [[200, 20, 30, 180], [380, 200, 30, 180], [480, 80, 80, 40]].forEach(([x, y, w, h]) =>
-    walls.push([x, y, x + w, y], [x + w, y, x + w, y + h], [x + w, y + h, x, y + h], [x, y + h, x, y]));
-  return walls;
-})();
-const GO2_SEGS = (() => {
-  let total = 0;
-  return GO2_PATH.slice(1).map((b, i) => {
-    const a = GO2_PATH[i];
-    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const seg = { a, b, length, start: total };
-    total += length;
-    return seg;
-  });
-})();
-const GO2_TOTAL = GO2_SEGS.reduce((sum, seg) => sum + seg.length, 0);
-const GO2_W1 = GO2_SEGS[2].start;
+// Shared illustrative pattern used on ThaiThai's mock PromptPay sheet.
 const TAG = [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1];
 
-function go2At(distance) {
-  for (const seg of GO2_SEGS) {
-    if (distance <= seg.start + seg.length) {
-      const k = (distance - seg.start) / seg.length;
-      return [seg.a[0] + (seg.b[0] - seg.a[0]) * k, seg.a[1] + (seg.b[1] - seg.a[1]) * k, Math.atan2(seg.b[1] - seg.a[1], seg.b[0] - seg.a[0])];
-    }
-  }
-  const last = GO2_SEGS[GO2_SEGS.length - 1];
-  return [last.b[0], last.b[1], Math.atan2(last.b[1] - last.a[1], last.b[0] - last.a[0])];
+// MP4 UI studies: only the selected preview plays. Reduced motion holds a planned-route still.
+function RobotPreviewVideo({ on, name, still, label }) {
+  const video = useRef(null);
+  useEffect(() => {
+    const player = video.current;
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      player.pause();
+      if (on && !preference.matches) {
+        player.currentTime = 0;
+        player.play().catch(() => {});
+      } else player.currentTime = still;
+    };
+    update();
+    player.addEventListener("loadedmetadata", update);
+    preference.addEventListener("change", update);
+    return () => {
+      player.pause();
+      player.removeEventListener("loadedmetadata", update);
+      preference.removeEventListener("change", update);
+    };
+  }, [on, still]);
+  return (
+    <div className="sc-screen">
+      <video ref={video} className="robot-preview-video" muted loop playsInline preload="metadata"
+        poster={`/assets/${name}.jpg?v=2`} aria-label={label}>
+        <source src={`/assets/${name}.mp4?v=2`} type="video/mp4" />
+      </video>
+    </div>
+  );
 }
 
-// Vectorised in the real code (NumPy); here each ray is a plain segment test against the walls.
-function rayLength(ox, oy, dx, dy, max) {
-  let best = max;
-  for (const [x1, y1, x2, y2] of GO2_WALLS) {
-    const ex = x2 - x1;
-    const ey = y2 - y1;
-    const den = dx * ey - dy * ex;
-    if (Math.abs(den) < 1e-9) continue;
-    const t = ((x1 - ox) * ey - (y1 - oy) * ex) / den;
-    const u = ((x1 - ox) * dy - (y1 - oy) * dx) / den;
-    if (t > 0 && t < best && u >= 0 && u <= 1) best = t;
-  }
-  return best;
-}
-
-const GO2_IDLE = { mission: 0, tag: false, done: false, w1: false, w2: false, log: ["nav2: map loaded", "nav2: goal accepted → W1"] };
-
+/* Go2: 2D occupancy-grid map, select area → generate waypoints → navigate. */
 export function Go2Screen({ on }) {
-  const bot = useRef(null);
-  const trail = useRef(null);
-  const rays = useRef(null);
-  const vel = useRef(null);
-  const [hud, setHud] = useState(GO2_IDLE);
-
-  useEffect(() => {
-    const draw = (distance, moving, now = 0) => {
-      const [x, y, heading] = go2At(distance);
-      bot.current?.setAttribute("transform", `translate(${x} ${y}) rotate(${heading * 180 / Math.PI})`);
-      let lines = "";
-      for (let i = 0; i < 24; i += 1) {
-        const angle = heading - 2.1 + i * (4.2 / 23);
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle);
-        const t = rayLength(x, y, dx, dy, 130);
-        lines += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + dx * t).toFixed(1)}" y2="${(y + dy * t).toFixed(1)}"/>`;
-      }
-      if (rays.current) rays.current.innerHTML = lines;
-      if (vel.current) vel.current.textContent = `${moving ? (0.42 + Math.sin(now / 300) * 0.03).toFixed(2) : "0.00"} m/s`;
-    };
-    setHud(GO2_IDLE);
-    trail.current?.setAttribute("points", "");
-    draw(0, false);
-    if (!on) return undefined;
-    if (reduced()) {
-      draw(GO2_W1, false);
-      return undefined;
-    }
-    let frame = 0;
-    let timers = [];
-    const run = () => {
-      const points = [];
-      let distance = 0;
-      let last = performance.now();
-      let pause = 0;
-      let w1 = false;
-      setHud(GO2_IDLE);
-      const step = (now) => {
-        const dt = Math.min(now - last, 50);
-        last = now;
-        if (pause > 0) pause -= dt;
-        else distance = Math.min(GO2_TOTAL, distance + 0.16 * dt);
-        const [x, y] = go2At(distance);
-        points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-        trail.current?.setAttribute("points", points.join(" "));
-        draw(distance, pause <= 0 && distance < GO2_TOTAL, now);
-        if (!w1 && distance >= GO2_W1) {
-          w1 = true;
-          pause = 700;
-          setHud((h) => ({ ...h, mission: 1, w1: true, log: [...h.log, "mqtt mission/status → W1 reached", "nav2: goal accepted → W2"].slice(-6) }));
-        }
-        if (distance >= GO2_TOTAL) {
-          setHud((h) => ({ ...h, mission: 2, w2: true, log: [...h.log, "mqtt mission/status → W2 reached"].slice(-6) }));
-          timers.push(window.setTimeout(() => setHud((h) => ({ ...h, tag: true, log: [...h.log, "apriltag: id 07 · pose locked"].slice(-6) })), 500));
-          timers.push(window.setTimeout(() => setHud((h) => ({ ...h, done: true })), 2000));
-          timers.push(window.setTimeout(run, 4200));
-          return;
-        }
-        frame = requestAnimationFrame(step);
-      };
-      frame = requestAnimationFrame(step);
-    };
-    run();
-    return () => { cancelAnimationFrame(frame); timers.forEach(window.clearTimeout); timers = []; };
-  }, [on]);
-
-  return (
-    <div className="sc-screen go2">
-      <div className="go2-bar">
-        <b>Ground station</b>
-        <span>ROS 2 · Nav2 · FAST-LIO</span>
-        <span className="go2-sim"><i />closed-loop simulation</span>
-      </div>
-      <svg className="go2-map" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid meet">
-        <defs><pattern id="go2-dots" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#2a2a28" /></pattern></defs>
-        <rect x="20" y="20" width="600" height="360" fill="url(#go2-dots)" stroke="#3a3a37" strokeWidth="2" />
-        <g fill="#232321" stroke="#4a4a46"><rect x="200" y="20" width="30" height="180" /><rect x="380" y="200" width="30" height="180" /><rect x="480" y="80" width="80" height="40" /></g>
-        <g ref={rays} stroke="#ff3b1f" strokeOpacity=".22" strokeWidth="1" />
-        <polyline points={GO2_PATH.map((p) => p.join(",")).join(" ")} fill="none" stroke="#ff3b1f" strokeWidth="2" strokeDasharray="6 6" opacity=".85" />
-        <polyline ref={trail} fill="none" stroke="#f1f0eb" strokeWidth="2.5" strokeLinecap="round" />
-        <g fontFamily="ui-monospace, monospace" fontSize="13" fill="#f1f0eb">
-          <circle cx="300" cy="110" r="9" fill="none" strokeWidth="1.5" stroke={hud.w1 ? "#ff3b1f" : "#f1f0eb"} /><text x="316" y="104">W1</text>
-          <circle cx="540" cy="300" r="9" fill="none" strokeWidth="1.5" stroke={hud.w2 ? "#ff3b1f" : "#f1f0eb"} /><text x="556" y="294">W2</text>
-          <text x="58" y="352" fill="#8a8a84">START</text>
-        </g>
-        <g ref={bot}><polygon points="13,0 -9,-8 -5,0 -9,8" fill="#f1f0eb" /><circle r="3" cx="2" fill="#ff3b1f" /></g>
-      </svg>
-      <div className="go2-side">
-        <div><p className="sc-k">Mission</p><p className="go2-big">{hud.mission} / 2</p></div>
-        <div><p className="sc-k">cmd_vel</p><p ref={vel} className="go2-v">0.00 m/s</p></div>
-        <div className="go2-cam" data-lock={hud.tag || undefined}>
-          <p className="sc-k">Camera · AprilTag</p>
-          <div className="go2-frame">
-            <div className="go2-tag">{TAG.map((bit, i) => <span key={i} data-w={bit ? undefined : ""} />)}</div>
-            <div className="go2-bracket"><s /><s /><s /><s /></div>
-          </div>
-          <p className="go2-cam-cap">{hud.tag ? "id 07 · pose locked" : "searching…"}</p>
-        </div>
-        <div className="go2-log">{hud.log.map((line, i) => <p key={`${i}-${line}`} data-red={line.startsWith("mqtt") || line.startsWith("apriltag") || undefined}>{line}</p>)}</div>
-      </div>
-      <div className="go2-done" data-on={hud.done || undefined}><p>Simulation result</p><b>Mission complete — 2 / 2 waypoints</b></div>
-    </div>
-  );
+  return <RobotPreviewVideo on={on} name="go2-slam-mission" still={4.5}
+    label="Unitree Go2 2D SLAM map and generated waypoint mission simulation" />;
 }
 
-/* ───────────── LCS: invoice tank selection (debounced search, selection across pages) ───────────── */
+/* ───────────── Tank Depot: tank depot app (layout from the user's screenshot, mock data) ───────────── */
 
-const LCS_ALL = [
-  ["TK-0142", "A"], ["TK-0217", "B"], ["TK-0108", "A"], ["TK-0391", "A"],
+// Laid out like the real Tank Depot screens the user sent (blue sidebar, "รายการแทงก์" with search, tabs,
+// "Current Inventory List" and its buttons, status badges, pagination) on a 1200 × 750 canvas scaled
+// to the laptop (--stage-scale). Every customer, tank number, product and user here is made up: the
+// real app holds client data under NDA. The flow acts out the user's own Tank Depot work: a debounced
+// search, then the invoice tank selection (same customer only, ticks kept across pages).
+
+const DEPOT_MENU = ["Dashboard", "Depot inventory", "Issue List", "Estimate", "Invoice", "Cargo", "Tariff", "Spare Part", "Customer", "User Management", "Report"];
+const DEPOT_STOCK = [
+  ["DMOU2500142", "Alpha Logistics", "60800412", "ลาน 3", "Glycerine", "AVL", "Available", "18/11/2026", "13/11/2026", "14/11/2026"],
+  ["DMOU2500517", "Alpha Logistics", "60794215", "ลาน 3", "Palm Olein", "AVL", "Available", "04/11/2026", "27/10/2026", "28/10/2026"],
+  ["DMOU2601108", "Coral Shipping Co., Ltd", "DEMO261120", "ลาน 1", "*EMPTY", "IND", "Cleaning", "25/11/2026", "20/11/2026", "-"],
+  ["DMOU2602231", "Bravo Chemicals", "60805530", "ลาน 3", "Sorbitol 70%", "BKD", "Booked", "30/10/2026", "20/10/2026", "27/10/2026"],
+  ["DMOU2603314", "Alpha Logistics", "60811208", "ลาน 2", "Base Oil SN150", "AVL", "Available", "02/11/2026", "29/10/2026", "31/10/2026"],
+  ["DMOU2604027", "Bravo Chemicals", "60812671", "ลาน 2", "Ethanol", "AVL", "Available", "01/11/2026", "26/10/2026", "29/10/2026"],
 ];
-const LCS_FOUND = [
-  [["TK-0101", "A"], ["TK-0108", "A"], ["TK-0115", "B"], ["TK-0123", "A"]],
-  [["TK-0131", "A"], ["TK-0142", "A"], ["TK-0156", "B"], ["TK-0177", "A"]],
+const DEPOT_FOUND = DEPOT_STOCK.filter((row) => row[0].startsWith("DMOU25"));
+const DEPOT_PICK = [
+  [["DMOU2500142", "A", "Cleaning"], ["DMOU2500517", "A", "LOLO"], ["DMOU2602231", "B", "Cleaning"], ["DMOU2603314", "A", "Cleaning"]],
+  [["DMOU2604115", "A", "LOLO"], ["DMOU2604027", "B", "Cleaning"], ["DMOU2604602", "A", "Cleaning"], ["DMOU2605230", "A", "LOLO"]],
 ];
-const LCS_CUSTOMER = { A: "Alpha Logistics", B: "Bravo Chemicals" };
-const LCS_EVENT = ["Cleaning", "LOLO", "Cleaning", "Cleaning"];
-const LCS_AT = {
-  rest: [56, 94],
-  search: [63, 24.5],
-  row0: [23.5, 39], row1: [23.5, 47], row2: [23.5, 55],
-  page1: [48, 71], page2: [52, 71],
-  confirm: [71, 81.5],
+const DEPOT_CUSTOMER = { A: "Alpha Logistics", B: "Bravo Chemicals" };
+const DEPOT_INVOICES = [
+  ["INV-2026-0417", "Alpha Logistics", "2", "21/11/2026"],
+  ["INV-2026-0416", "Bravo Chemicals", "5", "20/11/2026"],
+  ["INV-2026-0415", "Alpha Logistics", "1", "18/11/2026"],
+  ["INV-2026-0414", "Coral Shipping Co., Ltd", "3", "17/11/2026"],
+];
+// Pointer targets as % of the 1200 × 750 canvas.
+const DEPOT_AT = {
+  rest: [60, 96], search: [40, 8.7], invoice: [5, 26.9], create: [87.7, 10.3],
+  row0: [27.6, 38.3], row1: [27.6, 44.9], row2: [27.6, 51.6], page1: [48.7, 64.5], page2: [51.3, 64.5], confirm: [71.3, 71.5],
 };
-const LCS_SCRIPT = [
-  [0, { query: "", searching: false, found: false, page: 1, sel: [], modal: true, toast: false, denied: false, at: "rest", press: null }],
-  [600, { at: "search" }],
-  [1000, { query: "T" }], [1100, { query: "TK" }], [1200, { query: "TK-" }], [1300, { query: "TK-0" }], [1400, { query: "TK-01", searching: true }],
+const DEPOT_SCRIPT = [
+  [0, { page: "stock", query: "", searching: false, found: false, modal: false, mpage: 1, sel: [], denied: false, toast: false, at: "rest", press: null }],
+  [500, { at: "search" }],
+  [900, { query: "D" }], [1000, { query: "DM" }], [1100, { query: "DMO" }], [1200, { query: "DMOU" }], [1300, { query: "DMOU2" }], [1400, { query: "DMOU25", searching: true }],
   [1650, { searching: false, found: true }],
-  [2200, { at: "row0" }], [2500, { press: "row0", sel: ["TK-0101"] }], [2700, { press: null }],
-  [3000, { at: "row1" }], [3300, { press: "row1", sel: ["TK-0101", "TK-0108"] }], [3500, { press: null }],
-  [3800, { at: "row2" }], [4100, { press: "row2", denied: true }], [4300, { press: null }], [4900, { denied: false }],
-  [5000, { at: "page2" }], [5300, { press: "page2", page: 2 }], [5500, { press: null }],
-  [5900, { at: "row0" }], [6200, { press: "row0", sel: ["TK-0101", "TK-0108", "TK-0131"] }], [6400, { press: null }],
-  [6800, { at: "page1" }], [7100, { press: "page1", page: 1 }], [7300, { press: null }],
-  [7900, { at: "confirm" }], [8300, { press: "confirm" }], [8500, { press: null, modal: false, toast: true, at: "rest" }],
-  [10600, { toast: false }],
+  [3000, { at: "invoice" }], [3500, { press: "invoice", page: "invoice" }], [3700, { press: null }],
+  [4400, { at: "create" }], [4900, { press: "create", modal: true }], [5100, { press: null }],
+  [5600, { at: "row0" }], [5900, { press: "row0", sel: ["DMOU2500142"] }], [6100, { press: null }],
+  [6400, { at: "row1" }], [6700, { press: "row1", sel: ["DMOU2500142", "DMOU2500517"] }], [6900, { press: null }],
+  [7200, { at: "row2" }], [7500, { press: "row2", denied: true }], [7700, { press: null }], [8300, { denied: false }],
+  [8400, { at: "page2" }], [8700, { press: "page2", mpage: 2 }], [8900, { press: null }],
+  [9300, { at: "row0" }], [9600, { press: "row0", sel: ["DMOU2500142", "DMOU2500517", "DMOU2604115"] }], [9800, { press: null }],
+  [10200, { at: "page1" }], [10500, { press: "page1", mpage: 1 }], [10700, { press: null }],
+  [11300, { at: "confirm" }], [11700, { press: "confirm" }], [11900, { press: null, modal: false, toast: true, at: "rest" }],
+  [14200, { toast: false }],
 ];
 
-export function LcsScreen({ on }) {
-  const s = useScript(on, LCS_SCRIPT, 11400, { query: "TK-01", found: true, sel: ["TK-0101", "TK-0108"] });
-  const rows = s.found ? LCS_FOUND[s.page - 1] : LCS_ALL;
+const DepotBadge = ({ code }) => <span className="depot-badge" data-code={code}>{code}</span>;
+const DepotState = ({ text }) => <span className="depot-state" data-state={text}>{text}</span>;
+
+export function DepotScreen({ on }) {
+  const s = useScript(on, DEPOT_SCRIPT, 15000, { found: true, query: "DMOU25" });
+  const stock = s.found ? DEPOT_FOUND : DEPOT_STOCK;
+  const picks = DEPOT_PICK[s.mpage - 1];
   return (
-    <div className="sc-screen lcs">
-      <aside className="lcs-nav">
-        <b>LCS</b>
-        <span>แดชบอร์ด</span><span>ใบประเมินค่าซ่อม</span><span data-on>ใบแจ้งหนี้</span><span>เบิกคืนอะไหล่</span><span>รายงาน</span>
-      </aside>
-      <div className="lcs-main">
-        <div className="lcs-top"><h4>ใบแจ้งหนี้</h4><i>+ สร้างใบแจ้งหนี้</i></div>
-        <div className="lcs-list">
-          {s.toast && <p className="lcs-new">INV-2026-0418 · Alpha Logistics · 3 แทงก์</p>}
-          <p>INV-2026-0417 · Alpha Logistics · 2 แทงก์</p>
-          <p>INV-2026-0416 · Bravo Chemicals · 5 แทงก์</p>
-          <p>INV-2026-0415 · Alpha Logistics · 1 แทงก์</p>
-        </div>
-      </div>
-      <div className="lcs-dim" data-on={s.modal || undefined} />
-      <div className="lcs-modal" data-on={s.modal || undefined}>
-        <div className="lcs-head"><b>เลือกแทงก์</b><span>ลูกค้าเดียวกันเท่านั้น</span></div>
-        <div className="lcs-filters">
-          <span className="lcs-select">ลูกค้า: {LCS_CUSTOMER.A}</span>
-          <span className="lcs-search" data-focus={s.at === "search" || undefined}>{s.query || <em>ค้นหาเลขแทงก์</em>}{s.searching && <i className="lcs-spin" />}</span>
-        </div>
-        <div className="lcs-thead"><span /><span>เลขแทงก์</span><span>ลูกค้า</span><span>งาน</span><span>วันที่</span></div>
-        {rows.map(([id, customer], i) => {
-          const disabled = customer !== "A";
-          const checked = s.sel.includes(id);
-          return (
-            <div key={id} className="lcs-row" data-off={disabled || undefined} data-pressed={s.press === `row${i}` || undefined}>
-              <span className="lcs-check" data-on={checked || undefined}>{checked ? "✓" : ""}</span>
-              <span>{id}</span><span>{LCS_CUSTOMER[customer]}</span><span>{LCS_EVENT[i]}</span><span>0{3 + i}/11/2026</span>
-              {disabled && s.denied && i === 2 && <em className="lcs-tip">คนละลูกค้า — เลือกไม่ได้</em>}
+    <div className="sc-screen depot-screen">
+      <div className="depot">
+        <div className="depot-logo"><b>Depot</b><i>‹</i></div>
+        <aside className="depot-side">
+          <p>MENU</p>
+          {DEPOT_MENU.map((item) => (
+            <span key={item} data-on={(s.page === "stock" ? item === "Depot inventory" : item === "Invoice") || undefined}
+              data-pressed={s.press === "invoice" && item === "Invoice" || undefined}><i />{item}</span>
+          ))}
+          <p className="depot-support">SUPPORT</p>
+          <span><i />Logout</span>
+        </aside>
+        <header className="depot-head"><h4>{s.page === "stock" ? "รายการแทงก์" : "ใบแจ้งหนี้"}</h4><p>Depot Officer<br /><em>demo user</em></p></header>
+
+        {s.page === "stock" ? (
+          <main className="depot-main">
+            <div className="depot-searchrow">
+              <span className="depot-input" data-focus={s.at === "search" || undefined}>{s.query || <em>พิมพ์ค้นหา ชื่อลูกค้า, เบอร์แทงก์</em>}{s.searching && <i className="depot-spin" />}</span>
+              <span className="depot-go">⌕</span><span className="depot-outline">Advanced search</span>
             </div>
-          );
-        })}
-        <div className="lcs-pager">
-          <span data-on={s.page === 1 || undefined} data-pressed={s.press === "page1" || undefined}>1</span>
-          <span data-on={s.page === 2 || undefined} data-pressed={s.press === "page2" || undefined}>2</span>
+            <div className="depot-tabs">
+              <span>Expected Arrival (22)</span><span data-on>Current Inventory ({s.found ? DEPOT_FOUND.length : 345})</span><span>Tank History (5008)</span>
+              <i className="depot-outline">⇪ Plan Clean Date</i><i className="depot-outline">⇪ Booked</i>
+            </div>
+            <section className="depot-card">
+              <div className="depot-card-head"><b>▣ Current Inventory List</b><span><i>+ สร้างแทงก์</i><i>⤓ ดาวน์โหลด</i><i>⤓ ดาวน์โหลดทั้งหมด</i><i>⤓ ดาวน์โหลดแบบกรองข้อมูล</i></span></div>
+              <div className="depot-grid depot-th">
+                <span className="depot-box" /><span>เบอร์แทงก์</span><span>ชื่อลูกค้า</span><span>ประเภทแทงก์</span><span>เลขที่อ้างอิงแทงก์เข้า</span><span>ตำแหน่งลาน</span><span>ชื่อสินค้า</span><span>สถานะแทงก์สำหรับลูกค้า</span><span>สถานะแทงก์ภายใน</span><span>วันที่อัปเดต</span><span>วันที่แทงก์เข้า</span><span>วันที่ล้างเสร็จ</span>
+              </div>
+              {stock.map(([tank, customer, ref, yard, product, code, state, updated, inDate, cleaned]) => (
+                <div key={tank} className="depot-grid depot-tr">
+                  <span className="depot-box" /><span className="depot-link">{tank}</span><span>{customer}</span><span>CHM</span><span>{ref}</span><span>{yard}</span>
+                  <span className="depot-product">{product}</span><span><DepotBadge code={code} /></span><span><DepotState text={state} /></span>
+                  <span>{updated}</span><span>{inDate}</span><span>{cleaned}</span>
+                </div>
+              ))}
+            </section>
+            <div className="depot-pages"><i>«</i><i>‹</i><i data-on>1</i>{s.found ? null : <><i>2</i><i>3</i><i>4</i><i>5</i><i>…</i><i>35</i></>}<i>›</i><i>»</i><em>Showing 1-{stock.length} of {s.found ? DEPOT_FOUND.length : 345}</em></div>
+          </main>
+        ) : (
+          <main className="depot-main">
+            <section className="depot-card depot-inv">
+              <div className="depot-card-head"><b>▣ Invoice List</b><span><i data-pressed={s.press === "create" || undefined}>+ สร้างใบแจ้งหนี้</i><i>⤓ ดาวน์โหลด</i></span></div>
+              <div className="depot-grid depot-th depot-inv-grid"><span>เลขที่ใบแจ้งหนี้</span><span>ชื่อลูกค้า</span><span>จำนวนแทงก์</span><span>วันที่</span><span>สถานะ</span></div>
+              {s.toast && <div className="depot-grid depot-tr depot-inv-grid depot-new"><span className="depot-link">INV-2026-0418</span><span>Alpha Logistics</span><span>3</span><span>25/11/2026</span><span><DepotState text="Draft" /></span></div>}
+              {DEPOT_INVOICES.map(([no, customer, tanks, date]) => (
+                <div key={no} className="depot-grid depot-tr depot-inv-grid"><span className="depot-link">{no}</span><span>{customer}</span><span>{tanks}</span><span>{date}</span><span><DepotState text="Issued" /></span></div>
+              ))}
+            </section>
+          </main>
+        )}
+
+        <div className="depot-dim" data-on={s.modal || undefined} />
+        <div className="depot-modal" data-on={s.modal || undefined}>
+          <div className="depot-m-head"><b>เลือกแทงก์</b><span>เลือกได้เฉพาะลูกค้าเดียวกัน</span></div>
+          <div className="depot-m-filters"><span className="depot-input">ลูกค้า: {DEPOT_CUSTOMER.A}</span><span className="depot-input">ประเภทใบแจ้งหนี้: Cleaning / LOLO</span></div>
+          <div className="depot-m-grid depot-th"><span /><span>เบอร์แทงก์</span><span>ชื่อลูกค้า</span><span>งาน</span><span>วันที่</span></div>
+          {picks.map(([tank, customer, job], i) => {
+            const blocked = customer !== "A";
+            const checked = s.sel.includes(tank);
+            return (
+              <div key={tank} className="depot-m-grid depot-tr" data-off={blocked || undefined} data-pressed={s.press === `row${i}` || undefined}>
+                <span className="depot-check" data-on={checked || undefined}>{checked ? "✓" : ""}</span>
+                <span>{tank}</span><span>{DEPOT_CUSTOMER[customer]}</span><span>{job}</span><span>{20 + i}/11/2026</span>
+                {blocked && s.denied && <em className="depot-tip">คนละลูกค้า — เลือกไม่ได้</em>}
+              </div>
+            );
+          })}
+          <div className="depot-m-pages">
+            <i data-on={s.mpage === 1 || undefined} data-pressed={s.press === "page1" || undefined}>1</i>
+            <i data-on={s.mpage === 2 || undefined} data-pressed={s.press === "page2" || undefined}>2</i>
+          </div>
+          <div className="depot-m-foot"><span>เลือกแล้ว <b>{s.sel.length}</b> รายการ</span><i data-pressed={s.press === "confirm" || undefined}>ยืนยัน</i></div>
         </div>
-        <div className="lcs-foot"><span>เลือกแล้ว <b>{s.sel.length}</b> รายการ</span><i data-pressed={s.press === "confirm" || undefined}>ยืนยัน</i></div>
+        <p className="depot-toast" data-on={s.toast || undefined}>สร้างใบแจ้งหนี้สำเร็จ · 3 แทงก์</p>
+        <Pointer at={DEPOT_AT[s.at]} press={s.press} />
       </div>
-      <p className="lcs-toast" data-on={s.toast || undefined}>สร้างใบแจ้งหนี้แล้ว · 3 แทงก์</p>
-      <Pointer at={LCS_AT[s.at]} press={s.press} />
     </div>
   );
 }
 
-/* ───────────── Beachboy: coverage panel → lanes → simulated run ───────────── */
-
-// Work area 62–458 × 82–318 (after the margin); exclusion zone 360–458 × 82–150, so the top three
-// lanes stop short of it. Serpentine order, as the coverage planner hands waypoints to Nav2.
-const BB_LANES = [92, 118, 144, 170, 196, 222, 248, 274, 300].map((y, i) => {
-  const end = y < 158 ? 350 : 458;
-  return i % 2 ? [[end, y], [62, y]] : [[62, y], [end, y]];
-});
-const BB_PATH = BB_LANES.flat();
-const BB_SEGS = (() => {
-  let total = 0;
-  return BB_PATH.slice(1).map((b, i) => {
-    const a = BB_PATH[i];
-    const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    const seg = { a, b, length, start: total };
-    total += length;
-    return seg;
-  });
-})();
-const BB_TOTAL = BB_SEGS.reduce((sum, seg) => sum + seg.length, 0);
-const BB_AT = { rest: [50, 94], preview: [73, 45], start: [82, 45] };
-
-function bbAt(distance) {
-  for (const seg of BB_SEGS) {
-    if (distance <= seg.start + seg.length) {
-      const k = (distance - seg.start) / seg.length;
-      return [seg.a[0] + (seg.b[0] - seg.a[0]) * k, seg.a[1] + (seg.b[1] - seg.a[1]) * k, Math.atan2(seg.b[1] - seg.a[1], seg.b[0] - seg.a[0])];
-    }
-  }
-  return [...BB_PATH[BB_PATH.length - 1], Math.PI];
-}
-
-const BB_IDLE = { state: "IDLE", lanes: false, coverage: 0, done: false, at: "rest", press: null };
-
-export function BeachboyScreen({ on }) {
-  const bot = useRef(null);
-  const trail = useRef(null);
-  const [ui, setUi] = useState(BB_IDLE);
-
-  useEffect(() => {
-    const place = (distance) => {
-      const [x, y, heading] = bbAt(distance);
-      bot.current?.setAttribute("transform", `translate(${x} ${y}) rotate(${heading * 180 / Math.PI})`);
-    };
-    setUi(BB_IDLE);
-    trail.current?.setAttribute("points", "");
-    place(0);
-    if (!on) return undefined;
-    if (reduced()) {
-      setUi({ ...BB_IDLE, state: "PLANNED", lanes: true });
-      return undefined;
-    }
-    let frame = 0;
-    let timers = [];
-    const later = (ms, fn) => timers.push(window.setTimeout(fn, ms));
-    const run = () => {
-      setUi(BB_IDLE);
-      trail.current?.setAttribute("points", "");
-      place(0);
-      later(700, () => setUi((u) => ({ ...u, at: "preview" })));
-      later(1300, () => setUi((u) => ({ ...u, press: "preview", lanes: true, state: "PLANNED" })));
-      later(1500, () => setUi((u) => ({ ...u, press: null })));
-      later(2800, () => setUi((u) => ({ ...u, at: "start" })));
-      later(3300, () => setUi((u) => ({ ...u, press: "start", state: "RUNNING" })));
-      later(3500, () => {
-        setUi((u) => ({ ...u, press: null, at: "rest" }));
-        const points = [];
-        let distance = 0;
-        let last = performance.now();
-        const step = (now) => {
-          distance = Math.min(BB_TOTAL, distance + 0.5 * Math.min(now - last, 50));
-          last = now;
-          const [x, y] = bbAt(distance);
-          points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
-          trail.current?.setAttribute("points", points.join(" "));
-          place(distance);
-          setUi((u) => ({ ...u, coverage: Math.round((distance / BB_TOTAL) * 89) }));
-          if (distance < BB_TOTAL) frame = requestAnimationFrame(step);
-          else {
-            setUi((u) => ({ ...u, state: "COMPLETE", done: true }));
-            later(2600, run);
-          }
-        };
-        frame = requestAnimationFrame(step);
-      });
-    };
-    run();
-    return () => { cancelAnimationFrame(frame); timers.forEach(window.clearTimeout); timers = []; };
-  }, [on]);
-
-  return (
-    <div className="sc-screen bb">
-      <div className="go2-bar">
-        <b>Beachboy · Mission control</b>
-        <span className="bb-state" data-state={ui.state}>{ui.state}</span>
-        <span className="bb-rtk">RTK FIX</span>
-        <span className="go2-sim"><i />simulation</span>
-      </div>
-      <svg className="bb-map" viewBox="0 0 520 360" preserveAspectRatio="xMidYMid meet">
-        <defs><pattern id="bb-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#ff3b1f" strokeWidth="2" strokeOpacity=".5" /></pattern></defs>
-        <rect x="0" y="0" width="520" height="52" fill="#16242a" />
-        <text x="12" y="32" fill="#5d7480" fontFamily="ui-monospace, monospace" fontSize="12">sea</text>
-        <rect x="0" y="52" width="520" height="308" fill="#1d1b17" />
-        <rect x="50" y="70" width="420" height="260" fill="none" stroke="#6b6a63" strokeWidth="1.5" strokeDasharray="5 5" />
-        <rect x="62" y="82" width="396" height="236" fill="none" stroke="#3a3935" strokeWidth="1" />
-        <rect x="360" y="82" width="98" height="68" fill="url(#bb-hatch)" stroke="#ff3b1f" strokeOpacity=".7" />
-        <text x="366" y="100" fill="#ff3b1f" fontFamily="ui-monospace, monospace" fontSize="11">exclusion</text>
-        <g className="bb-lanes" data-on={ui.lanes || undefined}>
-          {BB_LANES.map(([a, b], i) => <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} pathLength="1" />)}
-        </g>
-        <polyline ref={trail} fill="none" stroke="#f1f0eb" strokeOpacity=".75" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
-        <g ref={bot}><rect x="-11" y="-8" width="22" height="16" rx="3" fill="#f1f0eb" /><rect x="5" y="-5" width="5" height="10" fill="#ff3b1f" /></g>
-      </svg>
-      <div className="bb-panel">
-        <p className="sc-k">Coverage</p>
-        <div className="bb-field"><span>Spacing</span><b>0.8 m</b></div>
-        <div className="bb-field"><span>Margin</span><b>0.5 m</b></div>
-        <div className="bb-field"><span>Bearing</span><b>0°</b></div>
-        <div className="bb-buttons">
-          <i data-pressed={ui.press === "preview" || undefined}>Preview</i>
-          <i data-pressed={ui.press === "start" || undefined} data-primary>Start</i>
-          <i>Stop</i>
-        </div>
-        <p className="sc-k">Covered</p>
-        <p className="go2-big">{ui.coverage}%</p>
-        <div className="bb-bar"><span style={{ width: `${ui.coverage}%` }} /></div>
-        <div className="bb-safety"><span>RTK fix ✓</span><span>Watchdog 300 ms ✓</span><span>Geofence ✓</span></div>
-      </div>
-      <div className="go2-done" data-on={ui.done || undefined}><p>Simulation · 8 × 6 m</p><b>89% covered, no collisions</b></div>
-      <Pointer at={BB_AT[ui.at]} press={ui.press} />
-    </div>
-  );
+/* Beachbot: draw area → generate coverage path → run mission. */
+export function BeachScreen({ on }) {
+  return <RobotPreviewVideo on={on} name="beachbot-coverage" still={4.2}
+    label="Beachbot area selection and coverage planner simulation" />;
 }
 
 /* ───────────── ThaiThai: the phone app (feed → live → buy → PromptPay) ───────────── */

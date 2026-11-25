@@ -105,3 +105,62 @@
   .pj-next { grid-column: 2; }
   .pj-card-screen { width: 100%; }
 }
+
+/* Project routes occupy one viewport, independent of Home's scroll-driven track. */
+html:has(main.pj), body:has(main.pj) { height: 100%; overflow: hidden; }
+body:has(main.pj)::after { display: none; }
+:root:has(main.pj)[data-opening] { overflow: hidden; }
+.pj {
+  height: calc(100dvh - var(--bar-h));
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  padding-block: 1rem;
+}
+.pj-head { margin-block-start: 1rem; padding-block-end: 1rem; }
+.pj-head h1 { font-size: clamp(2.5rem, min(8vw, 11dvh), 6rem); }
+.pj-summary { margin-block-start: .75rem; }
+.pj-body { min-height: 0; margin-block-start: 1rem; gap: 1rem; overflow: auto; }
+.pj-foot { margin-block-start: 1rem; padding-block-start: .8rem; gap: 1rem; }
+.pj-all { grid-template-rows: auto auto minmax(0, 1fr); }
+.pj-all-head { margin-block: 1rem; }
+.pj-cards {
+  display: grid;
+  grid-template-columns: none;
+  grid-template-rows: minmax(0, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: min(80vw, 22.5rem);
+  gap: 1.5rem;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sub) var(--bg);
+  padding-block-end: 1rem;
+}
+.pj-cards > li { min-width: 0; min-height: 0; scroll-snap-align: start; container-type: inline-size; }
+.pj-card { height: 100%; align-content: start; }
+.pj-card-screen { width: 100%; max-height: max(5rem, calc(100dvh - 27rem)); }
+@supports (transform: scale(calc(1px / 1px))) {
+  .pj-card-screen .sl-stage { --stage-scale: calc(100cqw / 1200px); }
+}
+
+@media (min-width: 900px) and (min-height: 600px) {
+  .pj { height: 100dvh; padding-block: clamp(1rem, 3dvh, 2rem); }
+  .pj-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr) minmax(0, 1.1fr);
+    grid-template-rows: minmax(0, 1fr);
+    overflow: hidden;
+    gap: clamp(1rem, 2vw, 2rem);
+  }
+  .pj-list-wrap, .pj-device, .pj-detail { grid-column: auto; grid-row: auto; min-height: 0; min-width: 0; }
+  .pj-list-wrap, .pj-detail { max-height: 100%; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+  .pj-device { position: static; align-self: center; padding: 0 .5rem; }
+  .pj .concept { min-height: 2.5rem; }
+  .pj-count { font-size: clamp(2.5rem, 6dvh, 4rem); }
+  .pj-detail h2 { font-size: clamp(1.4rem, 2vw, 2rem); margin-block-start: .8rem; }
+  .pj-text { margin-block-start: .8rem; font-size: .95rem; }
+  .pj-all .pj-cards { grid-auto-columns: min(30vw, 22.5rem); }
+}

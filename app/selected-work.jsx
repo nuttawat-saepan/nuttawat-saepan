@@ -4,20 +4,21 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ConceptSlides from "./slides";
 import { OneDScreen } from "./oned-showcase";
-import { BeachboyScreen, Go2Screen, LcsScreen, ThaiThaiPhone } from "./showcases";
+import { BeachScreen, DepotScreen, Go2Screen, ThaiThaiPhone } from "./showcases";
 import { projectSlug, projects } from "./projects";
 
 // Each project's laptop plays a live mock of what the user built (oned-showcase.jsx, showcases.jsx).
 // ThaiThai is a phone app: its laptop folds shut and a phone rises in front instead.
-const SHOWCASE = { oneD: OneDScreen, "Unitree Go2": Go2Screen, LCS: LcsScreen, Beachboy: BeachboyScreen };
+const SHOWCASE = { oneD: OneDScreen, "Unitree Go2": Go2Screen, "Tank Depot": DepotScreen, "Beach Robot": BeachScreen };
 const PHONE_APP = "ThaiThai";
 
 const pad = (value) => String(value).padStart(2, "0");
 const year = (period) => period.split("→").pop().trim().slice(0, 4);
 
-// Chapter II, after the reference's "Related work": a big numbered list of projects on the right.
-// Pointing at (or focusing) a project lights it, opens its scope, year and "What's inside" link,
-// and switches the laptop on the left to that project's first slide. Clicking opens its page.
+// Chapter II, after the reference's "Related work": the chapter label top left, the laptop bottom left,
+// a big list of projects on the right. Pointing at (or focusing) a project greys the others and
+// switches the laptop to that project. Clicking opens its page. Phones show each row's scope, year
+// and "What's inside" link; desktop hides them, as the reference list is names only.
 export default function SelectedWork() {
   const [active, setActive] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -80,12 +81,8 @@ export default function SelectedWork() {
     <section className="selected-work" id="projects" data-theme="ink" aria-labelledby="projects-title">
       <div className="wl">
         <div className="wl-left">
-          <p className="section-label" aria-hidden="true"><span>(02)</span> Selected projects — {pad(projects.length)}</p>
+          <p className="chapter" aria-hidden="true"><span className="chapter-num">02</span><span className="chapter-name">/ projects</span></p>
           <div className="wl-preview" aria-hidden="true">
-            <div className="wl-caption">
-              <p>{project.summary}</p>
-              <p className="wl-stack">{project.stack}</p>
-            </div>
             <div className="laptop" ref={laptopRef} data-device={phoneApp ? "phone" : undefined}>
               <div className="laptop-lid" ref={lidRef}>
                 <div className="laptop-screen" ref={screenRef}>
@@ -103,11 +100,9 @@ export default function SelectedWork() {
               <ThaiThaiPhone on={revealed && phoneApp} delay={phoneDelay} />
             </div>
           </div>
-          <p className="wl-note">✻ Screens are redrawn on mock data from my notes; live sites stay private for NDA or internal projects</p>
         </div>
 
         <div className="wl-right">
-          <p className="wl-hint" aria-hidden="true">Hover to preview · Click to explore</p>
           <h2 className="wl-label" id="projects-title">Related work</h2>
           <ol className="wl-list">
             {projects.map((item, order) => {
@@ -133,7 +128,9 @@ export default function SelectedWork() {
               );
             })}
           </ol>
-          <Link className="wl-all" href="/projects">View all work <span aria-hidden="true">→</span></Link>
+          <div className="wl-foot">
+            <Link className="wl-all" href="/projects">View all work <span aria-hidden="true">→</span></Link>
+          </div>
         </div>
       </div>
     </section>
